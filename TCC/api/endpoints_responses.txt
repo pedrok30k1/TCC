@@ -1,0 +1,311 @@
+# Respostas dos Endpoints da API
+
+Base URL: http://localhost/TCC/api/
+
+## Usuário
+
+### POST usuario/login
+**Body:**
+```json
+{
+  "email": "usuario@exemplo.com",
+  "senha": "senha123"
+}
+```
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Login realizado com sucesso",
+  "data": {
+    "id": 1,
+    "nome": "João Silva",
+    "email": "usuario@exemplo.com",
+    "tipo_usuario": "pai",
+    "ativo": 1,
+    "data_criacao": "2024-01-15 10:30:00"
+  }
+}
+```
+
+### POST usuario/cadastro
+**Body:**
+```json
+{
+  "nome": "João Silva",
+  "email": "joao@exemplo.com",
+  "senha": "senha123",
+  "tipo_usuario": "pai"
+}
+```
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Usuário cadastrado com sucesso",
+  "data": {
+    "id": 1,
+    "nome": "João Silva",
+    "email": "joao@exemplo.com",
+    "tipo_usuario": "pai",
+    "ativo": 1,
+    "data_criacao": "2024-01-15 10:30:00"
+  }
+}
+```
+
+### GET usuario/listar
+**Resposta:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 1,
+      "nome": "João Silva",
+      "email": "joao@exemplo.com",
+      "tipo_usuario": "pai",
+      "ativo": 1,
+      "data_criacao": "2024-01-15 10:30:00"
+    }
+  ]
+}
+```
+
+### POST usuario/atualizar
+**Body:**
+```json
+{
+  "id": 1,
+  "nome": "João Silva Atualizado",
+  "email": "joao.novo@exemplo.com"
+}
+```
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Usuário atualizado com sucesso",
+  "data": {
+    "id": 1,
+    "nome": "João Silva Atualizado",
+    "email": "joao.novo@exemplo.com",
+    "tipo_usuario": "pai",
+    "ativo": 1
+  }
+}
+```
+
+### GET usuario/ativador/{id}
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Usuário ativado com sucesso",
+  "data": {
+    "id": 1,
+    "ativo": 1
+  }
+}
+```
+
+### GET usuario/id_pai/{id}
+**Resposta:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 2,
+      "nome": "Maria Santos",
+      "email": "maria@exemplo.com",
+      "tipo_usuario": "filho",
+      "id_pai": 1,
+      "ativo": 1
+    }
+  ]
+}
+```
+
+### GET usuario/verificationcode
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Código de verificação gerado",
+  "data": {
+    "codigo": "ABC123",
+    "validade": "2024-01-17 10:15:00"
+  }
+}
+```
+
+## Categoria
+
+### GET categoria/listar_por_usuario/{id_usuario}
+**Resposta:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 1,
+      "nome": "Matemática",
+      "descricao": "Exercícios de matemática",
+      "id_usuario": 1,
+      "cor": "#FF5733",
+      "data_criacao": "2024-01-15 11:00:00"
+    }
+  ]
+}
+```
+
+### POST categoria/criar
+**Body:**
+```json
+{
+  "nome": "História",
+  "descricao": "Exercícios de história",
+  "id_usuario": 1,
+  "cor": "#3357FF"
+}
+```
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Categoria criada com sucesso",
+  "data": {
+    "id": 3,
+    "nome": "História",
+    "descricao": "Exercícios de história",
+    "id_usuario": 1,
+    "cor": "#3357FF"
+  }
+}
+```
+
+### POST categoria/atualizar
+**Body:**
+```json
+{
+  "id": 1,
+  "nome": "Matemática Avançada",
+  "descricao": "Exercícios avançados de matemática",
+  "cor": "#FF5733"
+}
+```
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Categoria atualizada com sucesso",
+  "data": {
+    "id": 1,
+    "nome": "Matemática Avançada",
+    "descricao": "Exercícios avançados de matemática",
+    "id_usuario": 1,
+    "cor": "#FF5733"
+  }
+}
+```
+
+### POST categoria/deletar
+**Body:**
+```json
+{
+  "id": 1
+}
+```
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Categoria deletada com sucesso"
+}
+```
+
+## Card
+
+### GET card/listar_por_categoria/{id_categoria}
+**Resposta:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 1,
+      "pergunta": "Quanto é 2 + 2?",
+      "resposta": "4",
+      "id_categoria": 1,
+      "dificuldade": "facil",
+      "data_criacao": "2024-01-15 12:00:00"
+    }
+  ]
+}
+```
+
+### POST card/criar
+**Body:**
+```json
+{
+  "pergunta": "Quanto é 10 ÷ 2?",
+  "resposta": "5",
+  "id_categoria": 1,
+  "dificuldade": "facil"
+}
+```
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Card criado com sucesso",
+  "data": {
+    "id": 3,
+    "pergunta": "Quanto é 10 ÷ 2?",
+    "resposta": "5",
+    "id_categoria": 1,
+    "dificuldade": "facil"
+  }
+}
+```
+
+### POST card/atualizar
+**Body:**
+```json
+{
+  "id": 1,
+  "pergunta": "Quanto é 2 + 2? (Atualizado)",
+  "resposta": "4",
+  "dificuldade": "medio"
+}
+```
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Card atualizado com sucesso",
+  "data": {
+    "id": 1,
+    "pergunta": "Quanto é 2 + 2? (Atualizado)",
+    "resposta": "4",
+    "id_categoria": 1,
+    "dificuldade": "medio"
+  }
+}
+```
+
+### POST card/deletar
+**Body:**
+```json
+{
+  "id": 1
+}
+```
+**Resposta:**
+```json
+{
+  "status": "success",
+  "message": "Card deletado com sucesso"
+}
+``` 

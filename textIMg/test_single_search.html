@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste API - Busca de Imagem Única</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .search-section {
+            margin-bottom: 30px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .search-button {
+            background: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .search-button:hover {
+            background: #0056b3;
+        }
+        .result-section {
+            margin-top: 30px;
+        }
+        .image-display {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .image-display img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .info-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info-label {
+            font-weight: bold;
+            width: 120px;
+            color: #555;
+        }
+        .info-value {
+            flex: 1;
+            color: #333;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Teste da API - Busca de Imagem Única</h1>
+        
+        <div class="search-section">
+            <input type="text" id="imageName" class="search-input" 
+                   placeholder="Digite o nome da imagem para buscar..." 
+                   onkeypress="handleKeyPress(event)">
+            <button onclick="searchImage()" class="search-button">Buscar Imagem</button>
+        </div>
+
+        <div id="result" class="result-section"></div>
+    </div>
+
+    <script>
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                searchImage();
+            }
+        }
+
+        async function searchImage() {
+            const imageName = document.getElementById('imageName').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!imageName) {
+                resultDiv.innerHTML = '<div class="error">Digite o nome da imagem</div>';
+                return;
+            }
+
+            // Mostrar loading
+            resultDiv.innerHTML = '<div class="loading">🔍 Buscando imagem...</div>';
+
+            try {
+                const response = await fetch(`search_single_image.php?name=${encodeURIComponent(imageName)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayImage(data.data);
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Erro na requisição: ${error.message}</div>`;
+            }
+        }
+
+        function displayImage(image) {
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = `
+                <div class="image-display">
+                    <img src="${image.url}" alt="${image.original_name}" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display:none; color: #666; padding: 20px;">
+                        Imagem não pode ser carregada. Verifique o caminho: ${image.upload_path}
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h3>📋 Informações da Imagem</h3>
+                    <div class="info-row">
+                        <div class="info-label">Nome:</div>
+                        <div class="info-value">${image.original_name}</div>
+                    </div>
+                    ${image.description ? `
+                    <div class="info-row">
+                        <div class="info-label">Descrição:</div>
+                        <div class="info-value">${image.description}</div>
+                    </div>
+                    ` : ''}
+                    <div class="info-row">
+                        <div class="info-label">Tipo:</div>
+                        <div class="info-value">${image.file_type.toUpperCase()}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Tamanho:</div>
+                        <div class="info-value">${formatFileSize(image.file_size)}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Data:</div>
+                        <div class="info-value">${formatDate(image.upload_date)}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">ID:</div>
+                        <div class="info-value">${image.id}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Caminho:</div>
+                        <div class="info-value">${image.upload_path}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('pt-BR');
+            } catch (e) {
+                return dateString;
+            }
+        }
+    </script>
+</body>
+</html>

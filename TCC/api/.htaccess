@@ -1,0 +1,13 @@
+# Ativa o motor de reescrita de URL do Apache
+RewriteEngine On
+
+# Verifica se o caminho requisitado NÃO é um arquivo existente
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Verifica se o caminho requisitado NÃO é um diretório existente
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redireciona todas as requisições para index.php, passando o caminho como parâmetro 'path'
+# QSA: mantém as query strings originais
+# L: última regra a ser processada
+RewriteRule ^(.*)$ index.php?path=$1 [QSA,L]

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Galeria de Imagens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .image-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .image-container {
+            height: 200px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        .image-info {
+            padding: 15px;
+        }
+        .image-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .image-details {
+            font-size: 12px;
+            color: #666;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            background: #e6ffe6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖼️ Teste Galeria de Imagens</h1>
+        <p>Testando a API de galeria para verificar se as imagens estão sendo carregadas corretamente.</p>
+        <button onclick="loadImages()">Carregar Imagens</button>
+        <button onclick="testAPI()">Testar API</button>
+        <div id="status"></div>
+    </div>
+
+    <div id="gallery" class="gallery">
+        <div class="loading">Clique em "Carregar Imagens" para começar...</div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<div class="loading">Testando API...</div>';
+
+            try {
+                const response = await fetch('http://192.168.20.51/textImg/get_images.php');
+                const data = await response.json();
+                
+                console.log('API Response:', data);
+                
+                if (data.success) {
+                    statusDiv.innerHTML = `<div class="success">✅ API funcionando! ${data.total} imagens encontradas</div>`;
+                } else {
+                    statusDiv.innerHTML = `<div class="error">❌ Erro na API: ${data.error}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">❌ Erro de conexão: ${error.message}</div>`;
+            }
+        }
+
+        async function loadImages() {
+            const galleryDiv = document.getElementById('gallery');
+            galleryDiv.innerHTML = '<div class="loading">Carregando imagens...</div>';
+
+            try {
+                const response = await fetch('http://192.168.20.51/textImg/get_images.php');
+                const data = await response.json();
+                
+                console.log('Gallery API Response:', data);
+
+                if (data.success && data.images && data.images.length > 0) {
+                    displayImages(data.images);
+                } else {
+                    galleryDiv.innerHTML = '<div class="loading">Nenhuma imagem encontrada</div>';
+                }
+            } catch (error) {
+                galleryDiv.innerHTML = `<div class="error">Erro ao carregar imagens: ${error.message}</div>`;
+            }
+        }
+
+        function displayImages(images) {
+            const galleryDiv = document.getElementById('gallery');
+            galleryDiv.innerHTML = '';
+
+            images.forEach(image => {
+                const card = document.createElement('div');
+                card.className = 'image-card';
+                
+                const imageUrl = image.url || `http://192.168.20.51/textImg/${image.upload_path}`;
+                
+                card.innerHTML = `
+                    <div class="image-container">
+                        <img src="${imageUrl}" 
+                             alt="${image.original_name}" 
+                             onerror="this.parentElement.innerHTML='<div style=\'color: #999; text-align: center;\'>❌ Erro ao carregar imagem<br><small>URL: ${imageUrl}</small></div>'"
+                             onload="console.log('Imagem carregada:', imageUrl)">
+                    </div>
+                    <div class="image-info">
+                        <div class="image-name">${image.original_name || 'Sem nome'}</div>
+                        <div class="image-details">
+                            Tamanho: ${formatFileSize(image.file_size)}<br>
+                            Data: ${image.upload_date}<br>
+                            ID: ${image.id}<br>
+                            URL: <small>${imageUrl}</small>
+                        </div>
+                    </div>
+                `;
+                
+                galleryDiv.appendChild(card);
+            });
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Carregar imagens automaticamente ao abrir a página
+        window.onload = function() {
+            testAPI();
+            loadImages();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Simples - Imagens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .image-test {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .image-container {
+            max-width: 300px;
+            margin: 10px 0;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            background: #e6ffe6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖼️ Teste Simples - Imagens</h1>
+        <p>Testando se as imagens estão acessíveis diretamente</p>
+        <button onclick="fixUrls()">Corrigir URLs</button>
+        <button onclick="loadImages()">Carregar Imagens</button>
+        <div id="status"></div>
+    </div>
+
+    <div id="images"></div>
+
+    <script>
+        async function fixUrls() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<div style="color: blue;">Corrigindo URLs...</div>';
+            
+            try {
+                const response = await fetch('fix_urls.php');
+                const text = await response.text();
+                statusDiv.innerHTML = '<div class="success">URLs corrigidas!</div>';
+                console.log('Fix response:', text);
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">Erro: ${error.message}</div>`;
+            }
+        }
+
+        async function loadImages() {
+            const imagesDiv = document.getElementById('images');
+            imagesDiv.innerHTML = '<div style="text-align: center; padding: 20px;">Carregando...</div>';
+            
+            try {
+                const response = await fetch('get_images.php');
+                const data = await response.json();
+                
+                if (data.success && data.images && data.images.length > 0) {
+                    displayImages(data.images);
+                } else {
+                    imagesDiv.innerHTML = '<div class="error">Nenhuma imagem encontrada</div>';
+                }
+            } catch (error) {
+                imagesDiv.innerHTML = `<div class="error">Erro: ${error.message}</div>`;
+            }
+        }
+
+        function displayImages(images) {
+            const imagesDiv = document.getElementById('images');
+            imagesDiv.innerHTML = '';
+            
+            images.forEach((image, index) => {
+                const container = document.createElement('div');
+                container.className = 'image-test';
+                
+                const imageUrl = image.url || `http://192.168.20.51/textImg/${image.upload_path}`;
+                
+                container.innerHTML = `
+                    <h3>Imagem ${index + 1}</h3>
+                    <p><strong>Nome:</strong> ${image.original_name}</p>
+                    <p><strong>URL:</strong> <a href="${imageUrl}" target="_blank">${imageUrl}</a></p>
+                    <div class="image-container">
+                        <img src="${imageUrl}" 
+                             alt="${image.original_name}" 
+                             onerror="this.parentElement.innerHTML='<div class=error>❌ Erro ao carregar imagem</div>'"
+                             onload="console.log('Imagem carregada:', imageUrl)">
+                    </div>
+                `;
+                
+                imagesDiv.appendChild(container);
+            });
+        }
+
+        // Carregar automaticamente ao abrir a página
+        window.onload = function() {
+            fixUrls();
+            setTimeout(loadImages, 1000); // Aguardar 1 segundo para corrigir URLs
+        };
+    </script>
+</body>
+</html>
