@@ -215,6 +215,22 @@ class ApiService {
       return {'status': 'error', 'message': 'Erro na conexão: $e'};
     }
   }
+
+  /// Listar perfil do usuário filho com categorias e cards
+  Future<Map<String, dynamic>> getCategoriaCard (int userId) async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('${ApiConstants.userProfileFilhoUrl}/$userId'),
+            headers: ApiConstants.defaultHeaders,
+          )
+          .timeout(ApiConstants.requestTimeout);
+
+      return _handleResponse(response);
+    } catch (e) {
+      return {'status': 'error', 'message': 'Erro na conexão: $e'};
+    }
+  }
   // ===========================
   // Métodos - Categoria
   // ===========================

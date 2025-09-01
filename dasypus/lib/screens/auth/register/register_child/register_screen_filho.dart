@@ -1,7 +1,9 @@
-import 'package:dasypus/widgets/calendary_icon.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
+import 'package:dasypus/widgets/calendary_icon.dart';
 import '../../../../common/constants/app_colors.dart';
 import '../../../../common/constants/app_text_styles.dart';
 import '../../../../common/models/usuario.dart';
@@ -27,7 +29,11 @@ class _RegisterScreenFilhoState extends State<RegisterScreenFilho> {
   final _confirmPasswordController = TextEditingController();
   final _cpfController = TextEditingController();
   final _birthDateController = TextEditingController();
-
+final TextEditingController imagemUrlController = TextEditingController();
+  // Variáveis para upload de imagem
+  final ImagePicker _picker = ImagePicker();
+  File? _selectedImage;
+  bool _isUploadingImage = false;
   
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -43,6 +49,97 @@ class _RegisterScreenFilhoState extends State<RegisterScreenFilho> {
     _cpfController.dispose();
     _birthDateController.dispose();
     super.dispose();
+  }
+
+  // Função para escolher imagem
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        final File imageFile = File(image.path);
+        final int fileSizeInBytes = await imageFile.length();
+        final double fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+
+        if (fileSizeInMB > 5.0) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Imagem muito grande! Máximo permitido: 5MB. '
+                  'Imagem: ${fileSizeInMB.toStringAsFixed(2)}MB',
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        setState(() {
+          _selectedImage = imageFile;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao selecionar imagem: $e')),
+        );
+      }
+    }
+  }
+
+  // Função para upload da imagem
+  Future<String?> _uploadSelectedImage() async {
+    if (_selectedImage == null) return null;
+
+    try {
+      setState(() {
+        _isUploadingImage = true;
+      });
+
+      final result = await _apiService.uploadImage(
+        _selectedImage!,
+        userId: 'filho',
+        description: 'Foto do filho',
+      );
+
+      setState(() {
+        _isUploadingImage = false;
+      });
+
+      if (result['status'] == 'success') {
+        final data = result['data'];
+        final String? url = data['url'];
+        final String? uploadPath = data['upload_path'];
+
+        String fileName = '';
+        if (url != null && url.isNotEmpty) {
+          fileName = url.split('/').last;
+        } else if (uploadPath != null) {
+          fileName = uploadPath.split('/').last;
+        }
+        if (fileName.isNotEmpty) {
+          imagemUrlController.text = fileName;
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Falha no upload: ${result['message']}')),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _isUploadingImage = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro no upload: $e')),
+        );
+      }
+    }
+    return null;
   }
 
   // Formatar CPF
@@ -111,6 +208,11 @@ class _RegisterScreenFilhoState extends State<RegisterScreenFilho> {
       });
 
       try {
+        String? fotoUrl;
+        if (_selectedImage != null) {
+          fotoUrl = await _uploadSelectedImage();
+        }
+
         // Criar objeto Usuario
         final usuario = Usuario(
           nome: _nameController.text.trim(),
@@ -118,7 +220,8 @@ class _RegisterScreenFilhoState extends State<RegisterScreenFilho> {
           senha: _passwordController.text,
           cpf: _cpfController.text.replaceAll(RegExp(r'[^\d]'), ''),
           dataNasc: Validators.parseBrazilianDate(_birthDateController.text) ?? DateTime.now(),
-          sobre: "oi",
+          sobre: " ",
+          fotoUrl: imagemUrlController.text, // <- aqui vai a imagem
         );
 
         // Chamada da API
@@ -353,6 +456,42 @@ class _RegisterScreenFilhoState extends State<RegisterScreenFilho> {
                           validator: _validateConfirmPassword,
                         ),
                         
+                        const SizedBox(height: 16),
+
+                        // Upload de foto do filho
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Foto do filho (opcional)',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            if (_selectedImage != null)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  _selectedImage!,
+                                  height: 120,
+                                  width: 120,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            const SizedBox(height: 8),
+                            if (_isUploadingImage)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: LinearProgressIndicator(),
+                              )
+                            else
+                              ElevatedButton.icon(
+                                onPressed: _pickImage,
+                                icon: const Icon(Icons.photo),
+                                label: const Text("Selecionar Foto"),
+                              ),
+                          ],
+                        ),
+
                         const SizedBox(height: 24),
 
                         // Botão de cadastro
@@ -375,4 +514,4 @@ class _RegisterScreenFilhoState extends State<RegisterScreenFilho> {
       ),
     );
   }
-} 
+}

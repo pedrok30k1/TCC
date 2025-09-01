@@ -1,3 +1,4 @@
+import 'package:dasypus/config/services/image_search_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../../../../common/constants/app_colors.dart';
@@ -17,10 +18,12 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   int? _userId;
   bool _isLoading = true;
+   String? _userFotoUrl;
   bool _hasError = false;
   String _errorMessage = '';
   Map<String, dynamic>? _userData;
   final ApiService _apiService = ApiService();
+  final ImageSearchService _imageService = ImageSearchService();
 
   @override
   void initState() {
@@ -37,7 +40,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       // Recuperar ID do usuário salvo
       final userId = await SharedPrefsHelper.getUserId();
-      
+      final fetchedFotoUrl = await SharedPrefsHelper.getUserFotoUrl();
+
       if (userId == null) {
         setState(() {
           _isLoading = false;
@@ -49,6 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       setState(() {
         _userId = userId;
+        _userFotoUrl = fetchedFotoUrl;
       });
 
       // Buscar dados do perfil na API
@@ -122,40 +127,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
               border: Border.all(color: Colors.white, width: 2),
             ),
             child: ClipOval(
-              child: _userData?['foto_url'] != null && _userData!['foto_url'].toString().isNotEmpty
-                  ? Image.network(
-                      _userData!['foto_url'],
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          color: Colors.grey[100],
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[700]!),
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[100],
-                          child: Icon(
-                            Icons.person,
-                            size: 40,
-                            color: Colors.grey[400],
-                          ),
-                        );
-                      },
-                    )
-                  : Container(
-                      color: Colors.grey[100],
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Colors.grey[400],
-                      ),
-                    ),
+              child: Container(
+                                height: 120,
+                                width: double.infinity,
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(12),
+                                    topRight: Radius.circular(12),
+                                  ),
+                                  child: Image.network(
+                                    _imageService.getImageUrl(
+                                      _userFotoUrl ?? '',
+                                    ),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        height: 120,
+                                        width: double.infinity,
+                                        color: Colors.grey[300],
+                                        child: const Icon(
+                                          Icons.person,
+                                          color: Colors.grey,
+                                          size: 40,
+                                        ),
+                                      );
+                                    },
+                                    loadingBuilder: (
+                                      context,
+                                      child,
+                                      loadingProgress,
+                                    ) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        height: 120,
+                                        width: double.infinity,
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
             ),
           ),
           const SizedBox(width: 16),

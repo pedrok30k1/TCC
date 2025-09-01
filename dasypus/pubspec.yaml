@@ -51,6 +51,8 @@ dependencies:
 
   flutter_colorpicker: ^1.0.3
 
+  qr_flutter: ^4.1.0
+
   # Flutter localizations for internationalization
   flutter_localizations:
     sdk: flutter

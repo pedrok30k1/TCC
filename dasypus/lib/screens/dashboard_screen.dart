@@ -1,3 +1,4 @@
+import 'package:dasypus/config/services/image_search_service.dart';
 import 'package:flutter/material.dart';
 import 'package:dasypus/screens/auth/profile/all_childs/profiles_filhos_screen.dart';
 import '../common/routes/app_routes.dart';
@@ -12,6 +13,8 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String? _userName;
+  String? _userFotoUrl;
+    final ImageSearchService _imageService = ImageSearchService();
 
   @override
   void initState() {
@@ -21,8 +24,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadUserData() async {
     final fetchedName = await SharedPrefsHelper.getUserName();
+    final fetchedFotoUrl = await SharedPrefsHelper.getUserFotoUrl();
     setState(() {
       _userName = fetchedName;
+      _userFotoUrl = fetchedFotoUrl;
     });
   }
 
@@ -58,15 +63,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding: const EdgeInsets.all(18),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 32,
-                        backgroundColor: Colors.blue.shade600,
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                      ),
+                      Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: ClipOval(
+              child: Container(
+                                height: 120,
+                                width: double.infinity,
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(12),
+                                    topRight: Radius.circular(12),
+                                  ),
+                                  child: Image.network(
+                                    _imageService.getImageUrl(
+                                      _userFotoUrl ?? '',
+                                    ),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        height: 120,
+                                        width: double.infinity,
+                                        color: Colors.grey[300],
+                                        child: const Icon(
+                                          Icons.person,
+                                          color: Colors.grey,
+                                          size: 40,
+                                        ),
+                                      );
+                                    },
+                                    loadingBuilder: (
+                                      context,
+                                      child,
+                                      loadingProgress,
+                                    ) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        height: 120,
+                                        width: double.infinity,
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+            ),
+          ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(

@@ -24,6 +24,7 @@ class ApiConstants {
   static const String userAtivadorEndpoint = 'usuario/ativador/';
   static const String userListeFilhoEndpoint = 'usuario/id_pai/';
   static const String userVerificationCodeEndpoint = 'usuario/verificationcode/';
+  static const String userProfileFilhoEndpoint = 'usuario/categorias_cards/';
   static const String delectUser = "usuario/deletar/";
 
   // ===========================
@@ -62,6 +63,7 @@ class ApiConstants {
   static String get userListeFilhoUrl => '$apiUrl$userListeFilhoEndpoint';
   static String get userVerificationCodeUrl => '$apiUrl$userVerificationCodeEndpoint';
   static String get  Userdelete => '$apiUrl$delectUser';
+  static String get userProfileFilhoUrl => '$apiUrl$userProfileFilhoEndpoint';
 
   // Categoria
   static String get listCategoriesByUserUrl => '$apiUrl$listCategoriesByUserEndpoint';

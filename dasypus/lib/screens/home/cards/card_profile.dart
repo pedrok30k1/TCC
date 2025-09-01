@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 class CardProfileScreen extends StatefulWidget {
-  const CardProfileScreen({super.key});
+  const CardProfileScreen({super.key, required bool showAppBar});
 
   @override
   State<CardProfileScreen> createState() => _CardProfileScreenState();

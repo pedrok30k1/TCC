@@ -88,11 +88,14 @@ class _LoginScreenState extends State<LoginScreen> {
           if (usuario.id != null) {
             final saved = await SharedPrefsHelper.saveUserId(usuario.id!);
             final nome = await SharedPrefsHelper.saveUserName(usuario.nome);
+            final foto_url = await SharedPrefsHelper.saveUserFotoUrl(usuario.fotoUrl ?? '');
             if(usuario.idPai == null ) {
               AppRoutes.navigateToReplacement(context, AppRoutes.dashboard);
             } else {
-              // colocar a tela home filho (ainda nao criada)
-              AppRoutes.navigateToReplacement(context, AppRoutes.listeFilho);
+            final saved = await SharedPrefsHelper.saveUserId(usuario.id!);
+            final nome = await SharedPrefsHelper.saveUserName(usuario.nome);
+            final foto_url = await SharedPrefsHelper.saveUserFotoUrl(usuario.fotoUrl ?? '');
+              AppRoutes.navigateToReplacement(context, AppRoutes.homeFilho);
             }
             if (saved) {
               print('✅ ID do usuário salvo: ${usuario.id}');

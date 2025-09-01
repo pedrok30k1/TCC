@@ -165,6 +165,58 @@ if ($api == 'usuario') {
             }
             exit;
         }
+       if ($acao == "categorias_cards") {
+    if (!is_numeric($param)) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'ID do usuário inválido'
+        ]);
+        exit;
+    }
+
+    try {
+        $db = DB::connect();
+
+        // Pega todas as categorias do usuário
+        $stmt = $db->prepare("SELECT id, nome, foto_url, tema_cor FROM categorias WHERE id_usuario = :id_usuario");
+        $stmt->bindParam(':id_usuario', $param);
+        $stmt->execute();
+        $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($categorias)) {
+            echo json_encode([
+                'status' => 'info',
+                'message' => 'Nenhuma categoria encontrada',
+                'data' => []
+            ]);
+            exit;
+        }
+
+        // Para cada categoria, pega os cards
+        foreach ($categorias as &$categoria) {
+            $stmt = $db->prepare("SELECT id AS card_id, titulo, descricao, imagem_url, tema_cor FROM cards WHERE id_categoria = :id_categoria");
+            $stmt->bindParam(':id_categoria', $categoria['id']);
+            $stmt->execute();
+            $cards = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $categoria['cards'] = $cards;
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => $categorias
+        ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+
+        
     }
     
     if ($method == "POST") {
@@ -172,7 +224,7 @@ if ($api == 'usuario') {
         $data = sanitizeInput($data);
         
         if ($acao == "cadastro") {
-            $required_fields = ['nome', 'email', 'senha', 'cpf', 'data_nasc', 'legenda'];
+            $required_fields = ['nome', 'email', 'senha', 'cpf', 'data_nasc'];
             $missing = [];
            
             foreach ($required_fields as $field) {
@@ -241,7 +293,7 @@ if ($api == 'usuario') {
                 $cpf = $data['cpf'];
                 $data_nasc = $data['data_nasc'];
                 $foto_url = $data['foto_url'] ?? null;
-                $legenda = $data['legenda'];
+                $legenda = $data['legenda'] ?? null;
                 $id_pai = is_numeric($param) ? $param : null;
                 
                 $sql = "INSERT INTO usuarios (nome, email, senha, cpf, data_nasc, foto_url, legenda";
@@ -290,7 +342,7 @@ if ($api == 'usuario') {
                 $email = $data['email'];
                 $senha = $data['senha'];
                 
-                $stmt = $db->prepare("SELECT id,ativo,nome,id_pai, senha FROM `usuarios` WHERE `email` = :email");
+                $stmt = $db->prepare("SELECT id,ativo,nome,id_pai,foto_url, senha FROM `usuarios` WHERE `email` = :email");
                 $stmt->bindParam(':email', $email);
                 $result = $stmt->execute();
                 

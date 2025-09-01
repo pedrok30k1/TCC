@@ -1,5 +1,6 @@
 import 'package:dasypus/screens/auth/carregamento/CircularProgressIndicator.dart';
 import 'package:dasypus/screens/home/cards/card_profile.dart';
+import 'package:dasypus/screens/home/filho/home_filho.dart';
 import 'package:dasypus/screens/home/group/categoria_profile.dart';
 import 'package:dasypus/screens/auth/profile/child/profile_filho_screen.dart';
 import 'package:dasypus/screens/auth/profile/all_childs/profiles_filhos_screen.dart';
@@ -62,9 +63,13 @@ class AppRoutes {
   // Rota de carregamento
   static const String loading = '/loading';
 
+  //Rota de home filho
+  static const String homeFilho = '/homeFilho';
+
   // Configuração das rotas usando Routefly
   static final routes = {
     splash: (context) => const SplashScreen(),
+    homeFilho: (context) => const HomeFilho(),
     loading: (context) => const LoadingScreen(),
     home: (context) => const LoginScreen(),
     login: (context) => const LoginScreen(),
@@ -75,7 +80,7 @@ class AppRoutes {
     listeFilho: (context) => const ProfilesFilhosScreen(),
     profileFilho: (context) => const ProfileScreenFilho(),
     listaCategoria: (context) => const CategoriaProfileScreen(),
-    listaCard: (context) => const CardProfileScreen(),
+    listaCard: (context) => const CardProfileScreen(showAppBar: false,),
     criarCategoria: (context) => const CriarCategoriaPage(),
     registerCard: (context) => const CriarCardPage(),
     settings: (context) =>

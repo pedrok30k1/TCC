@@ -1,3 +1,4 @@
+import 'package:dasypus/config/services/image_search_service.dart';
 import 'package:flutter/material.dart';
 import 'package:dasypus/common/routes/app_routes.dart';
 import 'package:dasypus/common/utils/shared_prefs_helper.dart';
@@ -15,7 +16,7 @@ class ProfilesFilhosScreen extends StatefulWidget {
 class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
   late final ApiService _apiService;
   late Future<List<Map<String, dynamic>>> _childrenFuture;
-
+  final ImageSearchService _imageService = ImageSearchService();
   final List<Color> profileColors = [
     Colors.blueAccent,
     Colors.redAccent,
@@ -39,12 +40,12 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
     }
 
     final resultado = await _apiService.getUserChildren(userId);
-    
+
     // Debug: mostrar o resultado da API
     print('🔍 Resultado da API getUserChildren: $resultado');
-    
+
     // Se não houver filhos ou se for um status de informação, retornar lista vazia
-    if (resultado['status'] == 'info' || 
+    if (resultado['status'] == 'info' ||
         resultado['status'] == 'warning' ||
         resultado['message']?.contains('não encontrado') == true ||
         resultado['message']?.contains('nenhum') == true ||
@@ -52,7 +53,7 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
       print('ℹ️ Nenhum filho encontrado, retornando lista vazia');
       return [];
     }
-    
+
     // Se for sucesso, processar os dados
     if (resultado['status'] == 'success') {
       dynamic rawData = resultado['data'];
@@ -64,7 +65,7 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
         return [];
       }
     }
-    
+
     // Se chegou aqui, é um erro real
     throw Exception(resultado['message'] ?? 'Erro ao carregar perfis');
   }
@@ -99,9 +100,9 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
           Text(
             "Quem está usando?",
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
         if (widget.showAppBar) const SizedBox(height: 20),
         Expanded(
@@ -134,10 +135,7 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Tente novamente mais tarde',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 16,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 16),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
@@ -161,7 +159,10 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
               final childrenList = snapshot.data ?? [];
 
               return GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 10,
+                ),
                 itemCount: childrenList.length + 1,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
@@ -185,8 +186,11 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: const [
-                              Icon(Icons.add_circle_outline,
-                                  size: 50, color: Colors.blueAccent),
+                              Icon(
+                                Icons.add_circle_outline,
+                                size: 50,
+                                color: Colors.blueAccent,
+                              ),
                               SizedBox(height: 10),
                               Text(
                                 "Adicionar perfil",
@@ -205,7 +209,9 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
 
                   final child = childrenList[index];
                   final color = profileColors[index % profileColors.length];
-
+                  if (child['imagem_url'] != null &&
+                      child['imagem_url'].toString().isNotEmpty)
+                    ;
                   return GestureDetector(
                     onTap: () => _onChildTap(child),
                     child: AnimatedContainer(
@@ -214,7 +220,10 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(24),
                         gradient: LinearGradient(
-                          colors: [color.withOpacity(0.85), color.withOpacity(0.55)],
+                          colors: [
+                            color.withOpacity(0.85),
+                            color.withOpacity(0.55),
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -234,12 +243,47 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
                             child: CircleAvatar(
                               radius: 42,
                               backgroundColor: Colors.white,
-                              child: Text(
-                                _getInitials(child['nome']),
-                                style: TextStyle(
-                                  color: color,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
+                              child: Container(
+                                height: 120,
+                                width: double.infinity,
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(12),
+                                    topRight: Radius.circular(12),
+                                  ),
+                                  child: Image.network(
+                                    _imageService.getImageUrl(
+                                      child['foto_url'] ?? '',
+                                    ),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        height: 120,
+                                        width: double.infinity,
+                                        color: Colors.grey[300],
+                                        child: const Icon(
+                                          Icons.image_not_supported,
+                                          color: Colors.grey,
+                                          size: 40,
+                                        ),
+                                      );
+                                    },
+                                    loadingBuilder: (
+                                      context,
+                                      child,
+                                      loadingProgress,
+                                    ) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        height: 120,
+                                        width: double.infinity,
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
@@ -257,7 +301,7 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
                                   offset: Offset(0, 1),
                                   blurRadius: 2,
                                   color: Colors.black26,
-                                )
+                                ),
                               ],
                             ),
                           ),
@@ -284,16 +328,16 @@ class _ProfilesFilhosScreenState extends State<ProfilesFilhosScreen> {
 
     return widget.showAppBar
         ? Scaffold(
-            backgroundColor: Colors.grey[50],
-            appBar: AppBar(
-              title: const Text("Perfis"),
-              centerTitle: true,
-              elevation: 0,
-              backgroundColor: Colors.blueAccent,
-              foregroundColor: Colors.white,
-            ),
-            body: content,
-          )
+          backgroundColor: Colors.grey[50],
+          appBar: AppBar(
+            title: const Text("Perfis"),
+            centerTitle: true,
+            elevation: 0,
+            backgroundColor: Colors.blueAccent,
+            foregroundColor: Colors.white,
+          ),
+          body: content,
+        )
         : SizedBox(height: 500, child: content);
   }
 }

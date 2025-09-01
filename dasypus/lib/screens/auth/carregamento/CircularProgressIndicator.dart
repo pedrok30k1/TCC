@@ -62,7 +62,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
          if(processedData['id_pai'] == null){
           Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
-          Navigator.pushReplacementNamed(context, '/registerFilho');
+          Navigator.pushReplacementNamed(context, '/homeFilho');
         }
         setState(() {
           _userData = processedData;
