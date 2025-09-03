@@ -316,6 +316,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           foregroundColor: Colors.white, backgroundColor: Colors.redAccent,
         ),
       ),
+       ElevatedButton.icon(
+          onPressed: _editar,
+        icon: const Icon(Icons.delete_forever),
+        label: const Text('Editar Usuario'),
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white, backgroundColor: Colors.redAccent,
+        ),
+      ),
     ],
   );
 }
@@ -342,7 +350,9 @@ Future<void> _deleteAccount() async {
     }
   }
 }
-
+Future<void>_editar() async{
+  AppRoutes.navigateToReplacement(context, AppRoutes.editarUsuario);
+}
 Future<bool?> _showDeleteConfirmationDialog() {
   return showDialog<bool>(
     context: context,
@@ -617,4 +627,6 @@ Future<bool?> _showDeleteConfirmationDialog() {
       ),
     );
   }
+
+  
 }

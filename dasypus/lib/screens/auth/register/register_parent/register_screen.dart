@@ -29,7 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _cpfController = TextEditingController();
   final _birthDateController = TextEditingController();
-final TextEditingController imagemUrlController = TextEditingController();
+  final TextEditingController imagemUrlController = TextEditingController();
   // Variáveis para upload de imagem
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;

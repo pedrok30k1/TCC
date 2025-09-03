@@ -1,4 +1,5 @@
 import 'package:dasypus/screens/auth/carregamento/CircularProgressIndicator.dart';
+import 'package:dasypus/screens/auth/editar/usuario_editar.dart';
 import 'package:dasypus/screens/home/cards/card_profile.dart';
 import 'package:dasypus/screens/home/filho/home_filho.dart';
 import 'package:dasypus/screens/home/group/categoria_profile.dart';
@@ -66,6 +67,9 @@ class AppRoutes {
   //Rota de home filho
   static const String homeFilho = '/homeFilho';
 
+  //Rota de atualização de perfil 
+  static const String editarUsuario = '/editarUsuario';
+
   // Configuração das rotas usando Routefly
   static final routes = {
     splash: (context) => const SplashScreen(),
@@ -83,6 +87,7 @@ class AppRoutes {
     listaCard: (context) => const CardProfileScreen(showAppBar: false,),
     criarCategoria: (context) => const CriarCategoriaPage(),
     registerCard: (context) => const CriarCardPage(),
+    editarUsuario: (context) => const UsuarioEditar(),
     settings: (context) =>
         const Scaffold(body: Center(child: Text('Configurações'))),
   };
