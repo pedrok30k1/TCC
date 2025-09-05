@@ -15,8 +15,7 @@ import '../../../../widgets/custom_button.dart';
 import '../../../../widgets/custom_text_field.dart';
 
 class UsuarioEditar extends StatefulWidget {
-  const UsuarioEditar({super.key});
-
+  const UsuarioEditar({super.key });
   @override
   State<UsuarioEditar> createState() => _UsuarioEditarState();
 }
@@ -54,7 +53,7 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
     sobreController.dispose();
     super.dispose();
   }
-
+  
   Future<void> _pickImage() async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -190,7 +189,7 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
   }
 
   void _handleRegister() async {
-    final userId = await SharedPrefsHelper.getUserId();
+    final userId = await SharedPrefsHelper.getUseralterarId();
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -227,7 +226,7 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
               ),
             );
 
-            AppRoutes.navigateToReplacement(context, AppRoutes.home);
+            AppRoutes.navigateToReplacement(context, AppRoutes.dashboard);
           }
         } else {
           setState(() {

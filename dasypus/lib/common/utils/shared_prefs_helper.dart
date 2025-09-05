@@ -96,6 +96,13 @@ class SharedPrefsHelper {
   static Future<String?> getUserFotoUrl() async {
     return await getString('user_foto_url');
   }
+  static Future<bool> saveUseralterarId(int idAlterar) async {
+    return await saveInt('id_alterar', idAlterar);
+  }
+  static Future<int?> getUseralterarId() async {
+    return await getInt('id_alterar');
+  }
+  
   /// Recuperar ID do usuário
   static Future<int?> getUserId() async {
     return await getInt('user_id');

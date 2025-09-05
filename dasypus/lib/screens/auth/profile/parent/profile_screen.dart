@@ -224,7 +224,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               ElevatedButton.icon(
-                onPressed: () => AppRoutes.navigateToReplacement(context, AppRoutes.editarUsuario),
+                onPressed: () {
+                  SharedPrefsHelper.saveUseralterarId(_userId!);
+                  AppRoutes.navigateToReplacement(context, AppRoutes.editarUsuario);
+                },
                 icon: const Icon(Icons.edit),
                 label: const Text('Editar Perfil'),
                 style: ElevatedButton.styleFrom(
