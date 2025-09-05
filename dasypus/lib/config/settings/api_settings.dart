@@ -4,10 +4,10 @@ class ApiConfig {
   // ===========================
 
   // Altere esta URL conforme seu ambiente:como colocar o IP do servidor ou domínio
-  static const String baseUrl = 'http://192.168.20.57/TCC/api/';
+  static const String baseUrl = 'http://10.0.2.2/TCC/api/';
 
   // URLs para diferentes ambientes:
-  static const String localhostUrl = 'http://192.168.20.57/TCC/api/';
+  static const String localhostUrl = 'http://10.0.2.2/TCC/api/';
   static const String androidEmulatorUrl = 'http://10.0.2.2/TCC/api/';
   static const String productionUrl = 'https://seudominio.com/api/';
 
@@ -16,10 +16,10 @@ class ApiConfig {
   // ===========================
 
   // URL base para o serviço de imagens (textIMg)
-  static const String imageServiceUrl = 'http://192.168.20.57/textIMg';
+  static const String imageServiceUrl = 'http://10.0.2.2/textIMg';
 
   // URL para diferentes ambientes do serviço de imagens:
-  static const String localhostImageUrl = 'http://192.168.20.57/textIMg';
+  static const String localhostImageUrl = 'http://10.0.2.2/textIMg';
   static const String androidEmulatorImageUrl = 'http://10.0.2.2/textIMg';
   static const String productionImageUrl = 'https://seudominio.com/textIMg';
 

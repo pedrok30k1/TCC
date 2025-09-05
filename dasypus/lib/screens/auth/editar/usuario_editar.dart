@@ -40,6 +40,10 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
   final ApiService _apiService = ApiService();
+  bool _hasError = false;
+  String _errorMessage = '';
+  Map<String, dynamic>? _userData;
+  int? _userId;
 
   @override
   void dispose() {
@@ -52,6 +56,60 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
     imagemUrlController.dispose();
     sobreController.dispose();
     super.dispose();
+  }
+  Future<void> _loadUserProfile() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _hasError = false;
+      });
+
+      final userId = await SharedPrefsHelper.getUserId();
+      final fotoUrl = await SharedPrefsHelper.getUserFotoUrl();
+
+      if (userId == null) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+          _errorMessage = 'ID do usuário não encontrado. Faça login novamente.';
+        });
+        return;
+      }
+
+      setState(() {
+        _userId = userId;
+      });
+
+      final resultado = await _apiService.getUserProfile(userId);
+
+      if (resultado['status'] == 'success') {
+        final rawData = resultado['data'];
+        Map<String, dynamic>? processedData;
+
+        if (rawData is List && rawData.isNotEmpty) {
+          processedData = Map<String, dynamic>.from(rawData.first);
+        } else if (rawData is Map<String, dynamic>) {
+          processedData = Map<String, dynamic>.from(rawData);
+        }
+
+        if (processedData != null) {
+          setState(() {
+            _userData = processedData;
+            _isLoading = false;
+          });
+        } else {
+          throw Exception('Dados do perfil inválidos');
+        }
+      } else {
+        throw Exception(resultado['message'] ?? 'Erro ao carregar perfil');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+        _errorMessage = 'Erro ao carregar perfil: $e';
+      });
+    }
   }
   
   Future<void> _pickImage() async {
