@@ -142,9 +142,9 @@ class ApiService {
               'email': usuario.email,
               'senha': usuario.senha,
               'cpf':usuario.cpf,
-              'data_nasc':usuario.dataNasc,
+              'data_nasc':usuario.dataNasc.toIso8601String(),
               'legenda':usuario.sobre,
-              'foto_url':usuario.fotoUrl
+              'foto_url':usuario.fotoUrl,
             }),
           )
           .timeout(ApiConstants.requestTimeout);

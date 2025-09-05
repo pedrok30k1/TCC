@@ -297,7 +297,7 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
                                 ),
                               ),
                               const SizedBox(height: 24),
-                              Center(child: Text('Criar Conta', style: AppTextStyles.headlineSmall)),
+                              Center(child: Text('Alterar conta', style: AppTextStyles.headlineSmall)),
                               const SizedBox(height: 24),
 
                               CustomTextField(
@@ -383,7 +383,11 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
                                 validator: _validateConfirmPassword,
                               ),
                               const SizedBox(height: 24),
-
+                              CustomTextField(
+                                controller: sobreController,
+                                labelText: 'Sobre do Usuario',
+                              ),
+                              const SizedBox(height: 24),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -415,7 +419,7 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
                               const SizedBox(height: 32),
 
                               CustomButton(
-                                text: 'Criar Conta',
+                                text: 'Alterar conta',
                                 onPressed: _handleRegister,
                                 isLoading: _isLoading,
                                 backgroundColor: AppColors.primary,
