@@ -40,6 +40,8 @@ class AppColors {
     colors: [accent, Color(0xFF45A049)],
   );
 
+  static var primaryLightOpacity;
+
   static Color? get azulEscuro => null;
 
   static Color? get azulMuitoClaro => null;

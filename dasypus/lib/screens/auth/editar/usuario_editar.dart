@@ -57,6 +57,11 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
     sobreController.dispose();
     super.dispose();
   }
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
   Future<void> _loadUserProfile() async {
     try {
       setState(() {
@@ -64,7 +69,7 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
         _hasError = false;
       });
 
-      final userId = await SharedPrefsHelper.getUserId();
+      final userId = await SharedPrefsHelper.getUseralterarId();
       final fotoUrl = await SharedPrefsHelper.getUserFotoUrl();
 
       if (userId == null) {
@@ -260,14 +265,17 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
         }
 
         final usuario = Usuario(
-          nome: _nameController.text.trim(),
-          email: _emailController.text.trim(),
-          senha: _passwordController.text,
-          cpf: _cpfController.text.replaceAll(RegExp(r'[^\d]'), ''),
-          dataNasc: Validators.parseBrazilianDate(_birthDateController.text) ?? DateTime.now(),
-          sobre: sobreController.text.trim(),
-          fotoUrl: imagemUrlController.text,
-        );
+  nome: _nameController.text.trim().isEmpty ? _userData!['nome'] : _nameController.text.trim(),
+  email: _emailController.text.trim().isEmpty ? _userData!['email'] : _emailController.text.trim(),
+   senha: _passwordController.text.isEmpty ? '' : _passwordController.text,
+  cpf: _cpfController.text.replaceAll(RegExp(r'[^\d]'), '').isEmpty ? _userData!['cpf'] : _cpfController.text.replaceAll(RegExp(r'[^\d]'), ''),
+  dataNasc: _birthDateController.text.isEmpty 
+      ? (Validators.parseBrazilianDate(_userData!['data_nasc'].toString()) ?? DateTime.now())
+      : (Validators.parseBrazilianDate(_birthDateController.text) ?? DateTime.now()),
+  sobre: sobreController.text.trim().isEmpty ? _userData!['sobre'] : sobreController.text.trim(),
+  fotoUrl: imagemUrlController.text.isEmpty ? _userData!['foto_url'] : imagemUrlController.text,
+);
+
 
         final resultado = await _apiService.updateUser(usuario, userId!);
 
@@ -359,31 +367,31 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
 
                               CustomTextField(
                                 controller: _nameController,
-                                labelText: 'Nome Completo',
-                                hintText: 'Digite seu nome completo',
+                                labelText: _userData!['nome'],
+                                hintText: 'Digite seu nome',
                                 keyboardType: TextInputType.name,
                                 prefixIcon: Icons.person_outlined,
-                                validator: Validators.validateName,
+                                
                               ),
                               const SizedBox(height: 16),
 
                               CustomTextField(
                                 controller: _emailController,
-                                labelText: 'Email',
+                                labelText: _userData!['email'],
                                 hintText: 'Digite seu email',
                                 keyboardType: TextInputType.emailAddress,
                                 prefixIcon: Icons.email_outlined,
-                                validator: Validators.validateEmail,
+                                
                               ),
                               const SizedBox(height: 16),
 
                               CustomTextField(
                                 controller: _cpfController,
-                                labelText: 'CPF',
+                                labelText: _userData!['cpf'],
                                 hintText: '000.000.000-00',
                                 keyboardType: TextInputType.number,
                                 prefixIcon: Icons.badge_outlined,
-                                validator: Validators.validateCPF,
+                                
                                 onChanged: _formatCPF,
                                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                               ),
@@ -391,11 +399,11 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
 
                               CustomTextField(
                                 controller: _birthDateController,
-                                labelText: 'Data de Nascimento',
+                                labelText: _userData!['data_nasc'],
                                 hintText: 'DD/MM/AAAA',
                                 keyboardType: TextInputType.number,
                                 prefixIcon: Icons.cake_outlined,
-                                validator: (value) => Validators.validateBrazilianDate(value, required: true),
+                                
                                 onChanged: _formatDate,
                                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 suffixIcon: FutureBuilder<IconButton>(
@@ -415,7 +423,7 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
 
                               CustomTextField(
                                 controller: _passwordController,
-                                labelText: 'Senha',
+                                labelText: _userData!['senha'] != null ? 'Senha atual' : 'Senha',
                                 hintText: 'Digite sua senha',
                                 obscureText: !_isPasswordVisible,
                                 prefixIcon: Icons.lock_outlined,
@@ -423,13 +431,13 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
                                   icon: Icon(_isPasswordVisible ? Icons.visibility_off : Icons.visibility),
                                   onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                                 ),
-                                validator: Validators.validatePassword,
+                                
                               ),
                               const SizedBox(height: 16),
 
                               CustomTextField(
                                 controller: _confirmPasswordController,
-                                labelText: 'Confirmar Senha',
+                                labelText: _userData!['senha']  != null ? 'Confirme a senha atual' : 'Confirme a senha',
                                 hintText: 'Confirme sua senha',
                                 obscureText: !_isConfirmPasswordVisible,
                                 prefixIcon: Icons.lock_outlined,
@@ -437,12 +445,12 @@ class _UsuarioEditarState extends State<UsuarioEditar> {
                                   icon: Icon(_isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility),
                                   onPressed: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
                                 ),
-                                validator: _validateConfirmPassword,
+                                
                               ),
                               const SizedBox(height: 24),
                               CustomTextField(
                                 controller: sobreController,
-                                labelText: 'Sobre do Usuario',
+                                labelText: _userData!['sobre'] ?? 'Sobre o filho (opcional)',
                               ),
                               const SizedBox(height: 24),
                               Column(

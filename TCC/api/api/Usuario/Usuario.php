@@ -420,7 +420,7 @@ if ($api == 'usuario') {
                 $db = DB::connect();
                 $data = json_decode(file_get_contents('php://input'), true);
                 
-                $required_fields = ['nome', 'email', 'senha', 'cpf', 'data_nasc', 'legenda'];
+                $required_fields = ['nome', 'email', 'cpf', 'data_nasc'];
                 foreach ($required_fields as $field) {
                     if (!isset($data[$field]) || empty($data[$field])) {
                         throw new Exception("Campo {$field} é obrigatório");
@@ -438,7 +438,6 @@ if ($api == 'usuario') {
                 $nome = $data['nome'];
                 $email = $data['email'];
                 $senha = $data['senha'];
-                $senha = password_hash($senha, PASSWORD_DEFAULT);
                 $cpf = $data['cpf'];
                 $data_nasc = $data['data_nasc'];
                 $legenda = $data['legenda'];
@@ -459,8 +458,9 @@ if ($api == 'usuario') {
                 if ($stmt->rowCount() > 0) {
                     throw new Exception("Email já cadastrado para outro usuário");
                 }
-
-                $stmt = $db->prepare("UPDATE `usuarios` SET `nome` = :nome, `email` = :email, `senha` = :senha, 
+                 if($senha != null){
+                     $senha = password_hash($senha, PASSWORD_DEFAULT);
+                   $stmt = $db->prepare("UPDATE `usuarios` SET `nome` = :nome, `email` = :email, `senha` = :senha, 
                                     `cpf` = :cpf, `data_nasc` = :data_nasc, `foto_url` = :foto_url, 
                                     `legenda` = :legenda 
                                     WHERE `id` = :id");
@@ -472,6 +472,23 @@ if ($api == 'usuario') {
                 $stmt->bindParam(':foto_url', $foto_url);
                 $stmt->bindParam(':legenda', $legenda);
                 $stmt->bindParam(':id', $param);
+                 }else{
+                       $senha = password_hash($senha, PASSWORD_DEFAULT);
+                   $stmt = $db->prepare("UPDATE `usuarios` SET `nome` = :nome, `email` = :email,  
+                                    `cpf` = :cpf, `data_nasc` = :data_nasc, `foto_url` = :foto_url, 
+                                    `legenda` = :legenda 
+                                    WHERE `id` = :id");
+                $stmt->bindParam(':nome', $nome);
+                $stmt->bindParam(':email', $email);
+                $stmt->bindParam(':cpf', $cpf);
+                $stmt->bindParam(':data_nasc', $data_nasc);
+                $stmt->bindParam(':foto_url', $foto_url);
+                $stmt->bindParam(':legenda', $legenda);
+                $stmt->bindParam(':id', $param);
+                 }
+                   
+               
+                
                 
                 $result = $stmt->execute();
                 if ($result === false) {
