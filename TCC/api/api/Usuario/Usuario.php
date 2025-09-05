@@ -10,6 +10,47 @@ function sanitizeInput($data) {
     }
 }
 
+/**
+ * Função auxiliar para deletar usuário e seus dados vinculados
+ */
+function deletarUsuario($db, $idUsuario)
+{
+    // Endereços
+    $stmt = $db->prepare("DELETE FROM enderecos_usuario WHERE id_usuario = :id");
+    $stmt->bindParam(':id', $idUsuario);
+    $stmt->execute();
+
+    // Telefones
+    $stmt = $db->prepare("DELETE FROM telefones_usuario WHERE id_usuario = :id");
+    $stmt->bindParam(':id', $idUsuario);
+    $stmt->execute();
+
+    // Mensagens
+    $stmt = $db->prepare("DELETE FROM mensagens WHERE id_usuario = :id");
+    $stmt->bindParam(':id', $idUsuario);
+    $stmt->execute();
+
+    // Categorias e cards
+    $stmt = $db->prepare("SELECT id FROM categorias WHERE id_usuario = :id");
+    $stmt->bindParam(':id', $idUsuario);
+    $stmt->execute();
+    $categorias = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    if (!empty($categorias)) {
+        $stmt = $db->prepare("DELETE FROM cards WHERE id_categoria IN (" . implode(',', $categorias) . ")");
+        $stmt->execute();
+
+        $stmt = $db->prepare("DELETE FROM categorias WHERE id_usuario = :id");
+        $stmt->bindParam(':id', $idUsuario);
+        $stmt->execute();
+    }
+
+    // Finalmente, deleta o usuário
+    $stmt = $db->prepare("DELETE FROM usuarios WHERE id = :id");
+    $stmt->bindParam(':id', $idUsuario);
+    $stmt->execute();
+}
+
 if ($api == 'usuario') {
     if ($method == "GET") {
         if (empty($acao)) {
@@ -165,58 +206,55 @@ if ($api == 'usuario') {
             }
             exit;
         }
-       if ($acao == "categorias_cards") {
-    if (!is_numeric($param)) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'ID do usuário inválido'
-        ]);
-        exit;
-    }
+        if ($acao == "categorias_cards") {
+            if (!is_numeric($param)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID do usuário inválido'
+                ]);
+                exit;
+            }
 
-    try {
-        $db = DB::connect();
+            try {
+                $db = DB::connect();
 
-        // Pega todas as categorias do usuário
-        $stmt = $db->prepare("SELECT id, nome, foto_url, tema_cor FROM categorias WHERE id_usuario = :id_usuario");
-        $stmt->bindParam(':id_usuario', $param);
-        $stmt->execute();
-        $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                // Pega todas as categorias do usuário
+                $stmt = $db->prepare("SELECT id, nome, foto_url, tema_cor FROM categorias WHERE id_usuario = :id_usuario");
+                $stmt->bindParam(':id_usuario', $param);
+                $stmt->execute();
+                $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        if (empty($categorias)) {
-            echo json_encode([
-                'status' => 'info',
-                'message' => 'Nenhuma categoria encontrada',
-                'data' => []
-            ]);
+                if (empty($categorias)) {
+                    echo json_encode([
+                        'status' => 'info',
+                        'message' => 'Nenhuma categoria encontrada',
+                        'data' => []
+                    ]);
+                    exit;
+                }
+
+                // Para cada categoria, pega os cards
+                foreach ($categorias as &$categoria) {
+                    $stmt = $db->prepare("SELECT id AS card_id, titulo, descricao, imagem_url, tema_cor FROM cards WHERE id_categoria = :id_categoria");
+                    $stmt->bindParam(':id_categoria', $categoria['id']);
+                    $stmt->execute();
+                    $cards = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    $categoria['cards'] = $cards;
+                }
+
+                echo json_encode([
+                    'status' => 'success',
+                    'data' => $categorias
+                ]);
+
+            } catch (Exception $e) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ]);
+            }
             exit;
         }
-
-        // Para cada categoria, pega os cards
-        foreach ($categorias as &$categoria) {
-            $stmt = $db->prepare("SELECT id AS card_id, titulo, descricao, imagem_url, tema_cor FROM cards WHERE id_categoria = :id_categoria");
-            $stmt->bindParam(':id_categoria', $categoria['id']);
-            $stmt->execute();
-            $cards = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            $categoria['cards'] = $cards;
-        }
-
-        echo json_encode([
-            'status' => 'success',
-            'data' => $categorias
-        ]);
-
-    } catch (Exception $e) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ]);
-    }
-    exit;
-}
-
-
-        
     }
     
     if ($method == "POST") {
@@ -286,7 +324,6 @@ if ($api == 'usuario') {
                 
                 $senha_hash = password_hash($data['senha'], PASSWORD_DEFAULT);
                
-                
                 $nome = $data['nome'];
                 $email = $data['email'];
                 $senha = $senha_hash;
@@ -383,7 +420,7 @@ if ($api == 'usuario') {
                 $db = DB::connect();
                 $data = json_decode(file_get_contents('php://input'), true);
                 
-                $required_fields = ['nome', 'email', 'senha', 'cpf', 'data_nasc', 'legenda', 'ativo'];
+                $required_fields = ['nome', 'email', 'senha', 'cpf', 'data_nasc', 'legenda'];
                 foreach ($required_fields as $field) {
                     if (!isset($data[$field]) || empty($data[$field])) {
                         throw new Exception("Campo {$field} é obrigatório");
@@ -405,7 +442,7 @@ if ($api == 'usuario') {
                 $cpf = $data['cpf'];
                 $data_nasc = $data['data_nasc'];
                 $legenda = $data['legenda'];
-                $ativo = $data['ativo'];
+                
                 $foto_url = isset($data['foto_url']) ? $data['foto_url'] : null;
 
                 $stmt = $db->prepare("SELECT id FROM usuarios WHERE id = :id");
@@ -425,7 +462,7 @@ if ($api == 'usuario') {
 
                 $stmt = $db->prepare("UPDATE `usuarios` SET `nome` = :nome, `email` = :email, `senha` = :senha, 
                                     `cpf` = :cpf, `data_nasc` = :data_nasc, `foto_url` = :foto_url, 
-                                    `legenda` = :legenda, `ativo` = :ativo 
+                                    `legenda` = :legenda 
                                     WHERE `id` = :id");
                 $stmt->bindParam(':nome', $nome);
                 $stmt->bindParam(':email', $email);
@@ -434,7 +471,6 @@ if ($api == 'usuario') {
                 $stmt->bindParam(':data_nasc', $data_nasc);
                 $stmt->bindParam(':foto_url', $foto_url);
                 $stmt->bindParam(':legenda', $legenda);
-                $stmt->bindParam(':ativo', $ativo);
                 $stmt->bindParam(':id', $param);
                 
                 $result = $stmt->execute();
@@ -455,104 +491,62 @@ if ($api == 'usuario') {
             }
         }
         if ($acao == "deletar") {
-    try {
-        if (!is_numeric($param)) {
-            throw new Exception("ID do usuário inválido");
-        }
-
-        $db = DB::connect();
-
-        // Verifica usuário
-        $stmt = $db->prepare("SELECT id, id_pai FROM usuarios WHERE id = :id");
-        $stmt->bindParam(':id', $param);
-        $stmt->execute();
-
-        if ($stmt->rowCount() === 0) {
-            throw new Exception("Usuário não encontrado");
-        }
-
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        $db->beginTransaction();
-
-        try {
-            // Se for pai (id_pai NULL), deleta filhos primeiro
-            if (is_null($user['id_pai'])) {
-                $stmt = $db->prepare("SELECT id FROM usuarios WHERE id_pai = :idPai");
-                $stmt->bindParam(':idPai', $user['id']);
-                $stmt->execute();
-                $filhos = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-                if (!empty($filhos)) {
-                    foreach ($filhos as $idFilho) {
-                        deletarUsuario($db, $idFilho);
-                    }
+            try {
+                if (!is_numeric($param)) {
+                    throw new Exception("ID do usuário inválido");
                 }
+
+                $db = DB::connect();
+
+                // Verifica usuário
+                $stmt = $db->prepare("SELECT id, id_pai FROM usuarios WHERE id = :id");
+                $stmt->bindParam(':id', $param);
+                $stmt->execute();
+
+                if ($stmt->rowCount() === 0) {
+                    throw new Exception("Usuário não encontrado");
+                }
+
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                $db->beginTransaction();
+
+                try {
+                    // Se for pai (id_pai NULL), deleta filhos primeiro
+                    if (is_null($user['id_pai'])) {
+                        $stmt = $db->prepare("SELECT id FROM usuarios WHERE id_pai = :idPai");
+                        $stmt->bindParam(':idPai', $user['id']);
+                        $stmt->execute();
+                        $filhos = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+                        if (!empty($filhos)) {
+                            foreach ($filhos as $idFilho) {
+                                deletarUsuario($db, $idFilho);
+                            }
+                        }
+                    }
+
+                    // Agora deleta o próprio usuário
+                    deletarUsuario($db, $user['id']);
+
+                    $db->commit();
+
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Usuário e todos os dados relacionados foram deletados com sucesso'
+                    ]);
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    throw new Exception("Erro ao deletar usuário: " . $e->getMessage());
+                }
+
+            } catch (Exception $e) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ]);
             }
-
-            // Agora deleta o próprio usuário
-            deletarUsuario($db, $user['id']);
-
-            $db->commit();
-
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Usuário e todos os dados relacionados foram deletados com sucesso'
-            ]);
-        } catch (Exception $e) {
-            $db->rollBack();
-            throw new Exception("Erro ao deletar usuário: " . $e->getMessage());
         }
-
-    } catch (Exception $e) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ]);
-    }
-}
-
-/**
- * Função auxiliar para deletar usuário e seus dados vinculados
- */
-function deletarUsuario($db, $idUsuario)
-{
-    // Endereços
-    $stmt = $db->prepare("DELETE FROM enderecos_usuario WHERE id_usuario = :id");
-    $stmt->bindParam(':id', $idUsuario);
-    $stmt->execute();
-
-    // Telefones
-    $stmt = $db->prepare("DELETE FROM telefones_usuario WHERE id_usuario = :id");
-    $stmt->bindParam(':id', $idUsuario);
-    $stmt->execute();
-
-    // Mensagens
-    $stmt = $db->prepare("DELETE FROM mensagens WHERE id_usuario = :id");
-    $stmt->bindParam(':id', $idUsuario);
-    $stmt->execute();
-
-    // Categorias e cards
-    $stmt = $db->prepare("SELECT id FROM categorias WHERE id_usuario = :id");
-    $stmt->bindParam(':id', $idUsuario);
-    $stmt->execute();
-    $categorias = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-    if (!empty($categorias)) {
-        $stmt = $db->prepare("DELETE FROM cards WHERE id_categoria IN (" . implode(',', $categorias) . ")");
-        $stmt->execute();
-
-        $stmt = $db->prepare("DELETE FROM categorias WHERE id_usuario = :id");
-        $stmt->bindParam(':id', $idUsuario);
-        $stmt->execute();
-    }
-
-    // Finalmente, deleta o usuário
-    $stmt = $db->prepare("DELETE FROM usuarios WHERE id = :id");
-    $stmt->bindParam(':id', $idUsuario);
-    $stmt->execute();
-   }
-
     }
 }
 ?>

@@ -131,17 +131,20 @@ class ApiService {
   }
 
   /// Atualizar usuário
-  Future<Map<String, dynamic>> updateUser(Usuario usuario) async {
+  Future<Map<String, dynamic>> updateUser(Usuario usuario,int userId) async {
     try {
       final response = await http
           .post(
-            Uri.parse(ApiConstants.updateUserUrl),
+            Uri.parse('${ApiConstants.updateUserUrl}/$userId'),
             headers: ApiConstants.defaultHeaders,
             body: json.encode({
-              'id': usuario.id,
               'nome': usuario.nome,
               'email': usuario.email,
-              if (usuario.senha.isNotEmpty) 'senha': usuario.senha,
+              'senha': usuario.senha,
+              'cpf':usuario.cpf,
+              'data_nasc':usuario.dataNasc.toIso8601String(),
+              'legenda':usuario.sobre,
+              'foto_url':usuario.fotoUrl,
             }),
           )
           .timeout(ApiConstants.requestTimeout);

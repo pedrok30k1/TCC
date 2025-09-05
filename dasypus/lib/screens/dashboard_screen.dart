@@ -1,6 +1,7 @@
 import 'package:dasypus/config/services/image_search_service.dart';
 import 'package:flutter/material.dart';
-import 'package:dasypus/screens/auth/profile/all_childs/profiles_filhos_screen.dart';
+import 'package:dasypus/screens/auth/profile/all_childs/profiles_filhos_screen.dart'
+    as allChildren; // 👈 alias para evitar conflito
 import '../common/routes/app_routes.dart';
 import '../common/utils/shared_prefs_helper.dart';
 
@@ -14,7 +15,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   String? _userName;
   String? _userFotoUrl;
-    final ImageSearchService _imageService = ImageSearchService();
+  final ImageSearchService _imageService = ImageSearchService();
 
   @override
   void initState() {
@@ -64,58 +65,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Row(
                     children: [
                       Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: ClipOval(
-              child: Container(
-                                height: 120,
-                                width: double.infinity,
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(12),
-                                    topRight: Radius.circular(12),
-                                  ),
-                                  child: Image.network(
-                                    _imageService.getImageUrl(
-                                      _userFotoUrl ?? '',
-                                    ),
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        height: 120,
-                                        width: double.infinity,
-                                        color: Colors.grey[300],
-                                        child: const Icon(
-                                          Icons.person,
-                                          color: Colors.grey,
-                                          size: 40,
-                                        ),
-                                      );
-                                    },
-                                    loadingBuilder: (
-                                      context,
-                                      child,
-                                      loadingProgress,
-                                    ) {
-                                      if (loadingProgress == null) return child;
-                                      return Container(
-                                        height: 120,
-                                        width: double.infinity,
-                                        color: Colors.grey[200],
-                                        child: const Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: ClipOval(
+                          child: Container(
+                            height: 120,
+                            width: double.infinity,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                topRight: Radius.circular(12),
                               ),
-            ),
-          ),
+                              child: Image.network(
+                                _imageService.getImageUrl(
+                                  _userFotoUrl ?? '',
+                                ),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    height: 120,
+                                    width: double.infinity,
+                                    color: Colors.grey[300],
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: Colors.grey,
+                                      size: 40,
+                                    ),
+                                  );
+                                },
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                    height: 120,
+                                    width: double.infinity,
+                                    color: Colors.grey[200],
+                                    child: const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -167,7 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 12),
 
             // Componente de perfis dos filhos
-            const ProfilesFilhosScreen(showAppBar: false),
+            const allChildren.ProfilesFilhosScreen(showAppBar: false), // 👈 usa o alias
           ],
         ),
       ),
