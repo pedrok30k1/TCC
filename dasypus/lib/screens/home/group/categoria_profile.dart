@@ -92,6 +92,107 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
     AppRoutes.navigateTo(context, AppRoutes.criarCategoria);
   }
 
+  void _onCategoriaOptions(BuildContext context, Map<String, dynamic> categoria) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+
+              // Título
+              Text(
+                categoria['nome'] ?? 'Categoria',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Card Editar
+              InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                  SharedPrefsHelper.saveCategoriaId(categoria['id']);
+                  print("função editar");
+                  //AppRoutes.navigateTo(context, AppRoutes.editarCategoria);
+                },
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const ListTile(
+                    leading: Icon(Icons.edit, color: Colors.blue),
+                    title: Text("Editar"),
+                  ),
+                ),
+              ),
+
+              // Card Deletar
+              InkWell(
+                onTap: () async {
+                  Navigator.pop(context);
+                  final confirm = await showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text("Confirmar exclusão"),
+                      content: const Text("Deseja realmente excluir esta categoria?"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text("Cancelar"),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                          ),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text("Excluir"),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    //await _apiService.deleteCategoria(categoria['id']);
+                    print("função");
+                    _loadUserFilho(); // recarregar lista
+                  }
+                },
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const ListTile(
+                    leading: Icon(Icons.delete, color: Colors.red),
+                    title: Text("Excluir"),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -217,110 +318,117 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
 
           // LISTA DE CATEGORIAS ou PLACEHOLDER
           Expanded(
-            child:
-                _categorias.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.inbox, size: 80, color: Colors.black26),
-                          const SizedBox(height: 12),
-                          const Text(
-                            "Nenhuma categoria encontrada para este usuário.",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black54,
-                            ),
+            child: _categorias.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.inbox, size: 80, color: Colors.black26),
+                        const SizedBox(height: 12),
+                        const Text(
+                          "Nenhuma categoria encontrada para este usuário.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black54,
                           ),
-                        ],
-                      ),
-                    )
-                    : ListView.builder(
-                      padding: const EdgeInsets.all(20),
-                      itemCount: _categorias.length,
-                      itemBuilder: (context, index) {
-                        final Map<String, dynamic> categoria =
-                            _categorias[index];
-                        return InkWell(
-                          onTap: () => _onCategoriaTap(categoria),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: _hexToColor(
-                                categoria['tema_cor'] ?? "#CCCCCC",
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Image section
-                                if (categoria['foto_url'] != null && categoria['foto_url'].toString().isNotEmpty)
-                                  Container(
-                                    height: 120,
-                                    width: double.infinity,
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(12),
-                                        topRight: Radius.circular(12),
-                                      ),
-                                      child: Image.network(
-                                        _imageService.getImageUrl(categoria['foto_url']),
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Container(
-                                            height: 120,
-                                            width: double.infinity,
-                                            color: Colors.grey[300],
-                                            child: const Icon(
-                                              Icons.image_not_supported,
-                                              color: Colors.grey,
-                                              size: 40,
-                                            ),
-                                          );
-                                        },
-                                        loadingBuilder: (context, child, loadingProgress) {
-                                          if (loadingProgress == null) return child;
-                                          return Container(
-                                            height: 120,
-                                            width: double.infinity,
-                                            color: Colors.grey[200],
-                                            child: const Center(
-                                              child: CircularProgressIndicator(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                // Title section
-                                Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Text(
-                                    categoria['nome'] ?? '',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: _categorias.length,
+                    itemBuilder: (context, index) {
+                      final Map<String, dynamic> categoria =
+                          _categorias[index];
+                      return InkWell(
+                        onTap: () => _onCategoriaTap(categoria),
+                        onLongPress: () => _onCategoriaOptions(context, categoria),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: _hexToColor(
+                              categoria['tema_cor'] ?? "#CCCCCC",
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Image section
+                              if (categoria['foto_url'] != null &&
+                                  categoria['foto_url'].toString().isNotEmpty)
+                                Container(
+                                  height: 120,
+                                  width: double.infinity,
+                                  child: ClipRRect(
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(12),
+                                      topRight: Radius.circular(12),
+                                    ),
+                                    child: Image.network(
+                                      _imageService
+                                          .getImageUrl(categoria['foto_url']),
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                          height: 120,
+                                          width: double.infinity,
+                                          color: Colors.grey[300],
+                                          child: const Icon(
+                                            Icons.image_not_supported,
+                                            color: Colors.grey,
+                                            size: 40,
+                                          ),
+                                        );
+                                      },
+                                      loadingBuilder: (context, child,
+                                          loadingProgress) {
+                                        if (loadingProgress == null) {
+                                          return child;
+                                        }
+                                        return Container(
+                                          height: 120,
+                                          width: double.infinity,
+                                          color: Colors.grey[200],
+                                          child: const Center(
+                                            child:
+                                                CircularProgressIndicator(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              // Title section
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                  categoria['nome'] ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
