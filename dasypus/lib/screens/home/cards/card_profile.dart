@@ -163,7 +163,10 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                           SnackBar(content: Text(response['message'] ?? "Erro ao deletar")),
                         );
                       }
-                    } 
+                    }catch (e) {
+                     // ScaffoldMessenger.of(context).showSnackBar(
+                       // SnackBar(content: Text("Erro ao deletar: $e")),
+                     // );
                     }
                   }
                 },
