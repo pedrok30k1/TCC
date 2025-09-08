@@ -67,7 +67,6 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
           _isLoading = false;
         });
       } else if (resultado['status'] == 'info') {
-        // Nenhum card encontrado → apenas lista vazia
         setState(() {
           _cards = [];
           _isLoading = false;
@@ -89,7 +88,91 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
   }
 
   void _onCardTap(Map<String, dynamic> card) {
-    speak(card['descricao'] ?? 'oi');
+    _showCardOptions(card);
+  }
+
+  void _showCardOptions(Map<String, dynamic> card) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.volume_up, color: Colors.blue),
+                title: const Text("Falar"),
+                onTap: () {
+                  Navigator.pop(context);
+                  speak(card['descricao'] ?? 'Sem descrição');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.edit, color: Colors.orange),
+                title: const Text("Editar"),
+                onTap: () {
+                  Navigator.pop(context);
+                  AppRoutes.navigateTo(
+                    context,
+                    AppRoutes.editCard
+                  );
+                  SharedPrefsHelper.saveIdCard(card['id']);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text("Deletar"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Confirmar"),
+                      content: const Text("Deseja realmente excluir este card?"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("Cancelar"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text(
+                            "Excluir",
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    try {
+                      final response = await _apiService.deleteCard(card['id']);
+                      if (response['status'] == 'success') {
+                        setState(() {
+                          _cards.removeWhere((c) => c['id'] == card['id']);
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Card deletado com sucesso")),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(response['message'] ?? "Erro ao deletar")),
+                        );
+                      }
+                    } 
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _onAddButtonPressed() {
@@ -114,7 +197,7 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
       backgroundColor: AppColors.azulClaro,
       body: Column(
         children: [
-          // HEADER estilizado
+          // HEADER
           Container(
             height: MediaQuery.of(context).size.height * 0.2,
             decoration: BoxDecoration(
@@ -219,7 +302,7 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
             ),
           ),
 
-          // LISTA DE CARDS ou PLACEHOLDER
+          // LISTA DE CARDS
           Expanded(
             child: _cards.isEmpty
                 ? Center(
@@ -265,8 +348,8 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Image section
-                                if (card['imagem_url'] != null && card['imagem_url'].toString().isNotEmpty)
+                                if (card['imagem_url'] != null &&
+                                    card['imagem_url'].toString().isNotEmpty)
                                   Container(
                                     height: 120,
                                     width: double.infinity,
@@ -304,7 +387,6 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                                       ),
                                     ),
                                   ),
-                                // Title section
                                 Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Text(

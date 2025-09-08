@@ -1,40 +1,45 @@
 import 'dart:io';
 
-import 'package:dasypus/common/models/categoria.dart';
+import 'package:dasypus/common/models/card.dart' as models;
 import 'package:dasypus/common/utils/shared_prefs_helper.dart';
 import 'package:dasypus/config/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:image_picker/image_picker.dart';
 
-class CategoriaEditar extends StatefulWidget {
-  const CategoriaEditar({super.key});
+class CardEditar extends StatefulWidget {
+  const CardEditar({super.key});
 
   @override
-  State<CategoriaEditar> createState() => _CategoriaEditarState();
+  State<CardEditar> createState() => _State();
 }
 
-class _CategoriaEditarState extends State<CategoriaEditar> {
-   final TextEditingController nomeController = TextEditingController();
-  final TextEditingController fotoUrlController = TextEditingController();
+class _State extends State<CardEditar> {
+  final TextEditingController tituloController = TextEditingController();
+  final TextEditingController descricaoController = TextEditingController();
+  final TextEditingController imagemUrlController = TextEditingController();
+  final TextEditingController fonteController = TextEditingController();
+
   final ApiService _apiService = ApiService();
-  int? userId;
+  int? categoriaId;
   Color temaCor = Colors.red;
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
   bool _isUploadingImage = false;
+  final FlutterTts flutterTts = FlutterTts();
+
+  Future<void> speak(String text) async {
+    await flutterTts.setLanguage("pt-BR");
+    await flutterTts.setPitch(1);
+    await flutterTts.setSpeechRate(0.5);
+    await flutterTts.speak(text);
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadUserId();
-  }
-
-  Future<void> _loadUserId() async {
-    final id = await SharedPrefsHelper.getCategoriaId();
-    setState(() {
-      userId = id;
-    });
+    _loadCategoriaId();
   }
 
   Future<void> _pickImage() async {
@@ -93,8 +98,8 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
     try {
       final result = await _apiService.uploadImage(
         _selectedImage!,
-        userId: userId?.toString() ?? 'app',
-        description: 'Category image upload',
+        userId: 'app',
+        description: 'Card image upload',
       );
       if (result['status'] == 'success') {
         final data = result['data'];
@@ -110,7 +115,7 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
         }
 
         if (fileName.isNotEmpty) {
-          fotoUrlController.text = fileName;
+          imagemUrlController.text = fileName;
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -122,6 +127,13 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
         context,
       ).showSnackBar(SnackBar(content: Text('Erro no upload: $e')));
     }
+  }
+
+  Future<void> _loadCategoriaId() async {
+    final id = await SharedPrefsHelper.getIdCard();
+    setState(() {
+      categoriaId = id;
+    });
   }
 
   void escolherCor() {
@@ -147,11 +159,11 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
     );
   }
 
-  void salvarCategoria() async {
-    if (userId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Usuário não encontrado!')));
+  void salvarCard() async {
+    if (categoriaId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Categoria não encontrada!')),
+      );
       return;
     }
 
@@ -160,15 +172,19 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
       await _uploadSelectedImage();
     }
 
-    final Categoria categoria = Categoria(
-      id: userId!,
-      nome: nomeController.text,
-      idUsuario: userId!,
-      fotoUrl:fotoUrlController.text.isNotEmpty ? fotoUrlController.text : null,
-      temaCor:'#${temaCor.value.toRadixString(16).padLeft(8, '0').substring(2)}',
+    final models.Card novoCard = models.Card(
+      titulo: tituloController.text,
+      descricao: descricaoController.text,
+      imagemUrl:
+          imagemUrlController.text.isNotEmpty ? imagemUrlController.text : null,
+      temaCor:
+          '#${temaCor.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}',
+      fonte: fonteController.text,
+      id: categoriaId!, 
+      idCategoria: 0,
     );
 
-    await _apiService.updateCategory(categoria);
+    await _apiService.updateCard(novoCard);
     Navigator.pop(context);
   }
 
@@ -176,7 +192,7 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE3F2FD), // azulClaro
-      appBar: AppBar(title: const Text("Criar Categoria")),
+      appBar: AppBar(title: const Text("Criar Card")),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -194,7 +210,7 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
               children: [
                 Column(
                   children: [
-                    // Card de preview
+                    // Pré-visualização do Card
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
@@ -209,7 +225,7 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Container(
-                              height: MediaQuery.of(context).size.height * 0.2,
+                              height: MediaQuery.of(context).size.height * 0.25,
                               width: double.infinity,
                               child:
                                   _selectedImage != null
@@ -222,16 +238,35 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
                                           fit: BoxFit.cover,
                                         ),
                                       )
-                                      : Center(
-                                        child: Text(
-                                          nomeController.text.isEmpty
-                                              ? "Categoria"
-                                              : nomeController.text,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                      : Container(
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.all(12),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              tituloController.text.isEmpty
+                                                  ? "Título"
+                                                  : tituloController.text,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              descricaoController.text.isEmpty
+                                                  ? "Descrição..."
+                                                  : descricaoController.text,
+                                              style: const TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 14,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
                                         ),
                                       ),
                             ),
@@ -294,26 +329,52 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
                         ],
                       ),
                     ),
+
                     const SizedBox(height: 20),
 
-                    // Campo Nome
+                    // Campo Título
                     Container(
                       padding: const EdgeInsets.all(8.0),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        color: const Color(0xFFB3E5FC), // azulClaroEscuro
+                        color: const Color(0xFFB3E5FC),
                       ),
                       child: TextField(
-                        controller: nomeController,
+                        controller: tituloController,
                         decoration: const InputDecoration(
-                          labelText: "Nome da Categoria",
+                          labelText: "Título do Card",
                         ),
                         onChanged: (_) => setState(() {}),
                       ),
                     ),
                     const SizedBox(height: 16),
 
-                    // Campo Foto da Categoria
+                    // Campo Descrição
+                    Container(
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: const Color(0xFFB3E5FC),
+                      ),
+                      child: TextField(
+                        controller: descricaoController,
+                        decoration: InputDecoration(
+                          labelText: "Insira sua frase",
+                          suffixIcon: IconButton(
+                            icon: const Icon(
+                              Icons.campaign,
+                            ), // ícone de megafone
+                            onPressed: () {
+                              speak(descricaoController.text);
+                            },
+                          ),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Campo/Seção Imagem
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -346,7 +407,7 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
                                   borderRadius: BorderRadius.circular(8),
                                   child: Image.file(
                                     _selectedImage!,
-                                    height: 120,
+                                    height: 160,
                                     width: double.infinity,
                                     fit: BoxFit.cover,
                                   ),
@@ -362,6 +423,22 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Campo Fonte
+                    Container(
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: const Color(0xFFB3E5FC),
+                      ),
+                      child: TextField(
+                        controller: fonteController,
+                        decoration: const InputDecoration(
+                          labelText: "Fonte (A, B, C...)",
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -390,9 +467,9 @@ class _CategoriaEditarState extends State<CategoriaEditar> {
                         ),
                       ),
                       onPressed:
-                          nomeController.text.trim().isEmpty
+                          tituloController.text.trim().isEmpty
                               ? null
-                              : salvarCategoria,
+                              : salvarCard,
                       child: const Text("Salvar"),
                     ),
                   ),

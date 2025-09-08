@@ -362,14 +362,13 @@ class ApiService {
     try {
       final response = await http
           .post(
-            Uri.parse(ApiConstants.updateCardUrl),
+            Uri.parse('${ApiConstants.updateCardUrl}/${card.id}'),
             headers: ApiConstants.defaultHeaders,
             body: json.encode({
               "titulo": card.titulo,
               "descricao": card.descricao,
               "imagem_url": card.imagemUrl ?? '',
               "tema_cor": card.temaCor ?? '#FF5733',
-              "id_categoria": card.idCategoria,
             }),
           )
           .timeout(ApiConstants.requestTimeout);
@@ -385,9 +384,9 @@ class ApiService {
     try {
       final response = await http
           .post(
-            Uri.parse(ApiConstants.deleteCardUrl),
+            Uri.parse('${ApiConstants.deleteCardUrl}/$cardId'),
             headers: ApiConstants.defaultHeaders,
-            body: json.encode({'id': cardId}),
+  
           )
           .timeout(ApiConstants.requestTimeout);
 

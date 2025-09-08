@@ -80,6 +80,12 @@ class SharedPrefsHelper {
   // ===========================
 
   /// Salvar ID do usuário
+  static Future<bool> saveIdCard(int idCard) async {
+    return await saveInt('id_card', idCard);
+  }
+  static Future<int?> getIdCard() async {
+    return await getInt('id_card');
+  }
   static Future<bool> saveUserId(int userId) async {
     return await saveInt('user_id', userId);
   }

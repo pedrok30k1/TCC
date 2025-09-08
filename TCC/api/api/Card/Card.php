@@ -177,18 +177,6 @@ if($api == 'card'){
                     $params[':tema_cor'] = $dados['tema_cor'];
                 }
                 
-                if (isset($dados['id_categoria'])) {
-                    $stmtCheck = $db->prepare("SELECT id FROM categorias WHERE id = :id");
-                    $stmtCheck->bindParam(':id', $dados['id_categoria']);
-                    $stmtCheck->execute();
-                    
-                    if ($stmtCheck->rowCount() == 0) {
-                        throw new Exception("A categoria informada não existe");
-                    }
-                    
-                    $sql .= "id_categoria = :id_categoria, ";
-                    $params[':id_categoria'] = $dados['id_categoria'];
-                }
                 
                 $sql = rtrim($sql, ", ");
                 
