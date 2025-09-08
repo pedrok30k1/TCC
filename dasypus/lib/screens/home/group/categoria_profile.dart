@@ -29,52 +29,59 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
   }
 
   Future<void> _loadUserFilho() async {
-    try {
+  try {
+    if (mounted) {
       setState(() {
         _isLoading = true;
         _hasError = false;
       });
+    }
 
-      int? userId = await SharedPrefsHelper.getUserFilhoId();
-      userId ??= await SharedPrefsHelper.getUserId();
+    int? userId = await SharedPrefsHelper.getUserFilhoId();
+    userId ??= await SharedPrefsHelper.getUserId();
 
-      if (userId == null) {
+    if (userId == null) {
+      if (mounted) {
         setState(() {
           _isLoading = false;
           _hasError = true;
           _errorMessage = 'ID do usuário não encontrado. Faça login novamente.';
         });
-        return;
       }
+      return;
+    }
 
+    if (mounted) {
       setState(() {
         _userId = userId;
       });
+    }
 
-      final resultado = await _apiService.getCategoriesByUser(userId);
+    final resultado = await _apiService.getCategoriesByUser(userId);
 
-      if (resultado['status'] == 'success') {
-        setState(() {
-          _categorias = List<Map<String, dynamic>>.from(
-            resultado['data'] ?? [],
-          );
-          _isLoading = false;
-        });
-        // ignore: avoid_print
-        print('Categorias carregadas: ' + _categorias.length.toString());
-      } else if (resultado['status'] == 'info') {
-        setState(() {
-          _categorias = [];
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _isLoading = false;
-          _hasError = true;
-          _errorMessage = resultado['message'] ?? 'Erro ao carregar categorias';
-        });
-      }
-    } catch (e) {
+    if (!mounted) return;
+
+    if (resultado['status'] == 'success') {
+      setState(() {
+        _categorias = List<Map<String, dynamic>>.from(
+          resultado['data'] ?? [],
+        );
+        _isLoading = false;
+      });
+    } else if (resultado['status'] == 'info') {
+      setState(() {
+        _categorias = [];
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+        _errorMessage = resultado['message'] ?? 'Erro ao carregar categorias';
+      });
+    }
+  } catch (e) {
+    if (mounted) {
       setState(() {
         _isLoading = false;
         _hasError = true;
@@ -82,6 +89,8 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
       });
     }
   }
+}
+
 
   void _onCategoriaTap(Map<String, dynamic> categoria) {
     showModalBottomSheet(
@@ -167,7 +176,7 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                   if (confirm == true) {
                     try {
                       final resultado =
-                       await _apiService.deleteCategoria(categoria['id']);
+                       await _apiService.deleteCategory(categoria['id']);
                       if (resultado['status'] == 'success') {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -185,9 +194,9 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                         );
                       }
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Erro: $e")),
-                      );
+                      //ScaffoldMessenger.of(context).showSnackBar(
+                       // SnackBar(content: Text("Erro: $e")),
+                      //);
                     }
                   }
                 },

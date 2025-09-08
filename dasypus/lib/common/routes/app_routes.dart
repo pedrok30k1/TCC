@@ -69,6 +69,9 @@ class AppRoutes {
 
   //Rota de atualização de perfil 
   static const String editarUsuario = '/editarUsuario';
+  
+  //Rota de atualização de categoria
+  static const String editarCategoria = '/editarCategoria';
 
   // Configuração das rotas usando Routefly
   static final routes = {
@@ -88,6 +91,7 @@ class AppRoutes {
     criarCategoria: (context) => const CriarCategoriaPage(),
     registerCard: (context) => const CriarCardPage(),
     editarUsuario: (context) => const UsuarioEditar(),
+    editarCategoria: (context) => const UsuarioEditar(),
     settings: (context) =>
         const Scaffold(body: Center(child: Text('Configurações'))),
   };
