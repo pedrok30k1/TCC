@@ -84,113 +84,123 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
   }
 
   void _onCategoriaTap(Map<String, dynamic> categoria) {
-    SharedPrefsHelper.saveCategoriaId(categoria['id']);
-    AppRoutes.navigateTo(context, AppRoutes.listaCard);
-  }
-
-  void _onAddButtonPressed() {
-    AppRoutes.navigateTo(context, AppRoutes.criarCategoria);
-  }
-
-  void _onCategoriaOptions(BuildContext context, Map<String, dynamic> categoria) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: Colors.white,
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              // Cabeçalho
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    categoria['nome'] ?? 'Categoria',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
+              const SizedBox(height: 10),
 
-              // Título
-              Text(
-                categoria['nome'] ?? 'Categoria',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Card Editar
-              InkWell(
+              // Card - Abrir lista de Cards
+              ListTile(
+                leading: const Icon(Icons.list_alt, color: Colors.blue),
+                title: const Text("Abrir Lista de Cards"),
                 onTap: () {
                   Navigator.pop(context);
                   SharedPrefsHelper.saveCategoriaId(categoria['id']);
-                  print("função editar");
-                  //AppRoutes.navigateTo(context, AppRoutes.editarCategoria);
+                  AppRoutes.navigateTo(context, AppRoutes.listaCard);
                 },
-                child: Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const ListTile(
-                    leading: Icon(Icons.edit, color: Colors.blue),
-                    title: Text("Editar"),
-                  ),
-                ),
               ),
 
-              // Card Deletar
-              InkWell(
+              // Card - Editar
+              ListTile(
+                leading: const Icon(Icons.edit, color: Colors.orange),
+                title: const Text("Editar Categoria"),
+                onTap: () {
+                  Navigator.pop(context);
+                  SharedPrefsHelper.saveCategoriaId(categoria['id']);
+                  AppRoutes.navigateTo(context, AppRoutes.editarCategoria);
+                },
+              ),
+
+              // Card - Deletar
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text("Deletar Categoria"),
                 onTap: () async {
                   Navigator.pop(context);
-                  final confirm = await showDialog(
+                  final confirm = await showDialog<bool>(
                     context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text("Confirmar exclusão"),
-                      content: const Text("Deseja realmente excluir esta categoria?"),
+                    builder: (context) => AlertDialog(
+                      title: const Text("Confirmar"),
+                      content: const Text("Deseja realmente deletar esta categoria?"),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
                           child: const Text("Cancelar"),
+                          onPressed: () => Navigator.pop(context, false),
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
                           ),
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text("Excluir"),
+                          child: const Text("Deletar"),
+                          onPressed: () => Navigator.pop(context, true),
                         ),
                       ],
                     ),
                   );
 
                   if (confirm == true) {
-                    //await _apiService.deleteCategoria(categoria['id']);
-                    print("função");
-                    _loadUserFilho(); // recarregar lista
+                    try {
+                      final resultado =
+                       await _apiService.deleteCategoria(categoria['id']);
+                      if (resultado['status'] == 'success') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Categoria deletada com sucesso!"),
+                          ),
+                        );
+                        _loadUserFilho(); // recarrega a lista
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              resultado['message'] ?? "Erro ao deletar.",
+                            ),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Erro: $e")),
+                      );
+                    }
                   }
                 },
-                child: Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const ListTile(
-                    leading: Icon(Icons.delete, color: Colors.red),
-                    title: Text("Excluir"),
-                  ),
-                ),
               ),
             ],
           ),
         );
       },
     );
+  }
+
+  void _onAddButtonPressed() {
+    AppRoutes.navigateTo(context, AppRoutes.criarCategoria);
   }
 
   @override
@@ -345,7 +355,6 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                           _categorias[index];
                       return InkWell(
                         onTap: () => _onCategoriaTap(categoria),
-                        onLongPress: () => _onCategoriaOptions(context, categoria),
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 8),
@@ -393,8 +402,8 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                                           ),
                                         );
                                       },
-                                      loadingBuilder: (context, child,
-                                          loadingProgress) {
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
                                         if (loadingProgress == null) {
                                           return child;
                                         }
