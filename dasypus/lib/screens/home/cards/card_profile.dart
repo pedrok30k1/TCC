@@ -39,27 +39,36 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
 
   Future<void> _loadUserFilho() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _hasError = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _hasError = false;
+        });
+      }
 
       final userId = await SharedPrefsHelper.getCategoriaId();
 
       if (userId == null) {
-        setState(() {
-          _isLoading = false;
-          _hasError = true;
-          _errorMessage = 'ID do usuário não encontrado. Faça login novamente.';
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _hasError = true;
+            _errorMessage =
+                'ID do usuário não encontrado. Faça login novamente.';
+          });
+        }
         return;
       }
 
-      setState(() {
-        _userId = userId;
-      });
+      if (mounted) {
+        setState(() {
+          _userId = userId;
+        });
+      }
 
       final resultado = await _apiService.getCardsByCategory(userId);
+
+      if (!mounted) return;
 
       if (resultado['status'] == 'success') {
         setState(() {
@@ -75,15 +84,18 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
         setState(() {
           _isLoading = false;
           _hasError = true;
-          _errorMessage = resultado['message'] ?? 'Erro ao carregar perfil';
+          _errorMessage =
+              resultado['message'] ?? 'Erro ao carregar perfil';
         });
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _hasError = true;
-        _errorMessage = 'Erro ao carregar perfil: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+          _errorMessage = 'Erro ao carregar perfil: $e';
+        });
+      }
     }
   }
 
@@ -113,13 +125,15 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
               ListTile(
                 leading: const Icon(Icons.edit, color: Colors.orange),
                 title: const Text("Editar"),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(context);
-                  AppRoutes.navigateTo(
-                    context,
-                    AppRoutes.editCard
-                  );
                   SharedPrefsHelper.saveIdCard(card['id']);
+
+                  // 🔥 espera voltar da edição e atualiza lista
+                   AppRoutes.navigateTo(context, AppRoutes.editCard);
+                  if (mounted) {
+                    await _loadUserFilho();
+                  }
                 },
               ),
               ListTile(
@@ -131,7 +145,8 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text("Confirmar"),
-                      content: const Text("Deseja realmente excluir este card?"),
+                      content: const Text(
+                          "Deseja realmente excluir este card?"),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
@@ -148,26 +163,41 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                     ),
                   );
 
-                  if (confirm == true) {
-                    try {
-                      final response = await _apiService.deleteCard(card['id']);
-                      if (response['status'] == 'success') {
-                        setState(() {
-                          _cards.removeWhere((c) => c['id'] == card['id']);
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Card deletado com sucesso")),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(response['message'] ?? "Erro ao deletar")),
-                        );
-                      }
-                    }catch (e) {
-                     // ScaffoldMessenger.of(context).showSnackBar(
-                       // SnackBar(content: Text("Erro ao deletar: $e")),
-                     // );
+                  if (confirm != true) return;
+
+                  if (!mounted) return;
+                  setState(() {
+                    _isLoading = true;
+                    // ✅ atualização otimista
+                    _cards.removeWhere((c) => c['id'] == card['id']);
+                  });
+
+                  try {
+                    final response =
+                        await _apiService.deleteCard(card['id']);
+
+                    if (!mounted) return;
+
+                    if (response['status'] == 'success') {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text("Card deletado com sucesso")),
+                      );
+                      await _loadUserFilho();
+                    } else {
+                      await _loadUserFilho();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(response['message'] ??
+                              "Erro ao deletar"),
+                        ),
+                      );
                     }
+                  } catch (e) {
+                    if (!mounted) return;
+                    await _loadUserFilho();
+                    
                   }
                 },
               ),
@@ -178,8 +208,12 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
     );
   }
 
-  void _onAddButtonPressed() {
-    AppRoutes.navigateTo(context, AppRoutes.registerCard);
+  Future<void> _onAddButtonPressed() async {
+    // 🔥 espera voltar da criação e atualiza lista
+     AppRoutes.navigateTo(context, AppRoutes.registerCard);
+    if (mounted) {
+      await _loadUserFilho();
+    }
   }
 
   @override
@@ -242,7 +276,8 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+                    SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.03),
                     Expanded(
                       child: Container(
                         height: MediaQuery.of(context).size.height * 0.09,
@@ -275,19 +310,24 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                                 ),
                                 child: const FittedBox(
                                   fit: BoxFit.contain,
-                                  child: Icon(Icons.collections, color: Colors.white),
+                                  child: Icon(Icons.collections,
+                                      color: Colors.white),
                                 ),
                               ),
                             ),
                             Expanded(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: MediaQuery.of(context).size.width * 0.04,
+                                  horizontal:
+                                      MediaQuery.of(context).size.width *
+                                          0.04,
                                 ),
                                 child: Text(
                                   "Meus Cards",
                                   style: TextStyle(
-                                    fontSize: MediaQuery.of(context).size.width * 0.045,
+                                    fontSize:
+                                        MediaQuery.of(context).size.width *
+                                            0.045,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black87,
                                   ),
@@ -312,7 +352,8 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.inbox, size: 80, color: Colors.black26),
+                        Icon(Icons.inbox,
+                            size: 80, color: Colors.black26),
                         const SizedBox(height: 12),
                         const Text(
                           "Nenhum card encontrado",
@@ -336,7 +377,8 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                         child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
-                            color: _hexToColor(card['tema_cor'] ?? "#CCCCCC"),
+                            color: _hexToColor(
+                                card['tema_cor'] ?? "#CCCCCC"),
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
@@ -352,8 +394,10 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (card['imagem_url'] != null &&
-                                    card['imagem_url'].toString().isNotEmpty)
-                                  Container(
+                                    card['imagem_url']
+                                        .toString()
+                                        .isNotEmpty)
+                                  SizedBox(
                                     height: 120,
                                     width: double.infinity,
                                     child: ClipRRect(
@@ -362,9 +406,11 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                                         topRight: Radius.circular(12),
                                       ),
                                       child: Image.network(
-                                        _imageService.getImageUrl(card['imagem_url']),
+                                        _imageService.getImageUrl(
+                                            card['imagem_url']),
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
+                                        errorBuilder: (context, error,
+                                            stackTrace) {
                                           return Container(
                                             height: 120,
                                             width: double.infinity,
@@ -376,14 +422,18 @@ class _CardProfileScreenState extends State<CardProfileScreen> {
                                             ),
                                           );
                                         },
-                                        loadingBuilder: (context, child, loadingProgress) {
-                                          if (loadingProgress == null) return child;
+                                        loadingBuilder: (context, child,
+                                            loadingProgress) {
+                                          if (loadingProgress == null) {
+                                            return child;
+                                          }
                                           return Container(
                                             height: 120,
                                             width: double.infinity,
                                             color: Colors.grey[200],
                                             child: const Center(
-                                              child: CircularProgressIndicator(),
+                                              child:
+                                                  CircularProgressIndicator(),
                                             ),
                                           );
                                         },

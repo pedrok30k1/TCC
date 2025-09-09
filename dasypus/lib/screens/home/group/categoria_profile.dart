@@ -29,68 +29,69 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
   }
 
   Future<void> _loadUserFilho() async {
-  try {
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-        _hasError = false;
-      });
-    }
+    try {
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _hasError = false;
+        });
+      }
 
-    int? userId = await SharedPrefsHelper.getUserFilhoId();
-    userId ??= await SharedPrefsHelper.getUserId();
+      int? userId = await SharedPrefsHelper.getUserFilhoId();
+      userId ??= await SharedPrefsHelper.getUserId();
 
-    if (userId == null) {
+      if (userId == null) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _hasError = true;
+            _errorMessage =
+                'ID do usuário não encontrado. Faça login novamente.';
+          });
+        }
+        return;
+      }
+
+      if (mounted) {
+        setState(() {
+          _userId = userId;
+        });
+      }
+
+      final resultado = await _apiService.getCategoriesByUser(userId);
+
+      if (!mounted) return;
+
+      if (resultado['status'] == 'success') {
+        setState(() {
+          _categorias = List<Map<String, dynamic>>.from(
+            resultado['data'] ?? [],
+          );
+          _isLoading = false;
+        });
+      } else if (resultado['status'] == 'info') {
+        setState(() {
+          _categorias = [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+          _errorMessage =
+              resultado['message'] ?? 'Erro ao carregar categorias';
+        });
+      }
+    } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
           _hasError = true;
-          _errorMessage = 'ID do usuário não encontrado. Faça login novamente.';
+          _errorMessage = 'Erro ao carregar perfil: $e';
         });
       }
-      return;
-    }
-
-    if (mounted) {
-      setState(() {
-        _userId = userId;
-      });
-    }
-
-    final resultado = await _apiService.getCategoriesByUser(userId);
-
-    if (!mounted) return;
-
-    if (resultado['status'] == 'success') {
-      setState(() {
-        _categorias = List<Map<String, dynamic>>.from(
-          resultado['data'] ?? [],
-        );
-        _isLoading = false;
-      });
-    } else if (resultado['status'] == 'info') {
-      setState(() {
-        _categorias = [];
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-        _hasError = true;
-        _errorMessage = resultado['message'] ?? 'Erro ao carregar categorias';
-      });
-    }
-  } catch (e) {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _hasError = true;
-        _errorMessage = 'Erro ao carregar perfil: $e';
-      });
     }
   }
-}
-
 
   void _onCategoriaTap(Map<String, dynamic> categoria) {
     showModalBottomSheet(
@@ -124,39 +125,46 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
               ),
               const SizedBox(height: 10),
 
-              // Card - Abrir lista de Cards
+              // Abrir lista de Cards
               ListTile(
                 leading: const Icon(Icons.list_alt, color: Colors.blue),
                 title: const Text("Abrir Lista de Cards"),
                 onTap: () {
                   Navigator.pop(context);
                   SharedPrefsHelper.saveCategoriaId(categoria['id']);
-                  AppRoutes.navigateTo(context, AppRoutes.listaCard);
+                  AppRoutes.navigateToAndClear(context, AppRoutes.listaCard);
                 },
               ),
 
-              // Card - Editar
+              // Editar
               ListTile(
                 leading: const Icon(Icons.edit, color: Colors.orange),
                 title: const Text("Editar Categoria"),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(context);
                   SharedPrefsHelper.saveCategoriaId(categoria['id']);
+
+                  // 🔥 Espera voltar da edição e atualiza
                   AppRoutes.navigateTo(context, AppRoutes.editarCategoria);
+                  if (mounted) {
+                    await _loadUserFilho();
+                  }
                 },
               ),
 
-              // Card - Deletar
+              // Deletar
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
                 title: const Text("Deletar Categoria"),
                 onTap: () async {
                   Navigator.pop(context);
+
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text("Confirmar"),
-                      content: const Text("Deseja realmente deletar esta categoria?"),
+                      content: const Text(
+                          "Deseja realmente deletar esta categoria?"),
                       actions: [
                         TextButton(
                           child: const Text("Cancelar"),
@@ -173,31 +181,43 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                     ),
                   );
 
-                  if (confirm == true) {
-                    try {
-                      final resultado =
-                       await _apiService.deleteCategory(categoria['id']);
-                      if (resultado['status'] == 'success') {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Categoria deletada com sucesso!"),
+                  if (confirm != true) return;
+
+                  if (!mounted) return;
+                  setState(() {
+                    _isLoading = true;
+                    // ✅ Atualização otimista
+                    _categorias
+                        .removeWhere((c) => c['id'] == categoria['id']);
+                  });
+
+                  try {
+                    final resultado =
+                        await _apiService.deleteCategory(categoria['id']);
+
+                    if (!mounted) return;
+
+                    if (resultado['status'] == 'success') {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text("Categoria deletada com sucesso!")),
+                      );
+                      await _loadUserFilho();
+                    } else {
+                      await _loadUserFilho();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            resultado['message'] ?? "Erro ao deletar.",
                           ),
-                        );
-                        _loadUserFilho(); // recarrega a lista
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              resultado['message'] ?? "Erro ao deletar.",
-                            ),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      //ScaffoldMessenger.of(context).showSnackBar(
-                       // SnackBar(content: Text("Erro: $e")),
-                      //);
+                        ),
+                      );
                     }
+                  } catch (e) {
+                    if (!mounted) return;
+                    await _loadUserFilho();
+                  
                   }
                 },
               ),
@@ -208,14 +228,19 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
     );
   }
 
-  void _onAddButtonPressed() {
+  Future<void> _onAddButtonPressed() async {
+    // 🔥 Espera voltar da criação e atualiza
     AppRoutes.navigateTo(context, AppRoutes.criarCategoria);
+    if (mounted) {
+      await _loadUserFilho();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+          body: Center(child: CircularProgressIndicator()));
     }
 
     if (_hasError) {
@@ -226,7 +251,7 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
       backgroundColor: AppColors.azulClaro,
       body: Column(
         children: [
-          // HEADER estilizado
+          // HEADER
           Container(
             height: MediaQuery.of(context).size.height * 0.2,
             decoration: BoxDecoration(color: AppColors.azulMuitoClaro),
@@ -266,7 +291,8 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+                    SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.03),
                     Expanded(
                       child: Container(
                         height: MediaQuery.of(context).size.height * 0.09,
@@ -310,14 +336,15 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
                                   horizontal:
-                                      MediaQuery.of(context).size.width * 0.04,
+                                      MediaQuery.of(context).size.width *
+                                          0.04,
                                 ),
                                 child: Text(
                                   "Minhas Categorias",
                                   style: TextStyle(
                                     fontSize:
                                         MediaQuery.of(context).size.width *
-                                        0.045,
+                                            0.045,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black87,
                                   ),
@@ -335,14 +362,15 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
             ),
           ),
 
-          // LISTA DE CATEGORIAS ou PLACEHOLDER
+          // LISTA
           Expanded(
             child: _categorias.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.inbox, size: 80, color: Colors.black26),
+                        Icon(Icons.inbox,
+                            size: 80, color: Colors.black26),
                         const SizedBox(height: 12),
                         const Text(
                           "Nenhuma categoria encontrada para este usuário.",
@@ -383,23 +411,26 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Image section
+                              // Imagem
                               if (categoria['foto_url'] != null &&
-                                  categoria['foto_url'].toString().isNotEmpty)
-                                Container(
+                                  categoria['foto_url']
+                                      .toString()
+                                      .isNotEmpty)
+                                SizedBox(
                                   height: 120,
                                   width: double.infinity,
                                   child: ClipRRect(
-                                    borderRadius: const BorderRadius.only(
+                                    borderRadius:
+                                        const BorderRadius.only(
                                       topLeft: Radius.circular(12),
                                       topRight: Radius.circular(12),
                                     ),
                                     child: Image.network(
-                                      _imageService
-                                          .getImageUrl(categoria['foto_url']),
+                                      _imageService.getImageUrl(
+                                          categoria['foto_url']),
                                       fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
+                                      errorBuilder: (context, error,
+                                          stackTrace) {
                                         return Container(
                                           height: 120,
                                           width: double.infinity,
@@ -411,8 +442,8 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                                           ),
                                         );
                                       },
-                                      loadingBuilder:
-                                          (context, child, loadingProgress) {
+                                      loadingBuilder: (context, child,
+                                          loadingProgress) {
                                         if (loadingProgress == null) {
                                           return child;
                                         }
@@ -429,7 +460,7 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                                     ),
                                   ),
                                 ),
-                              // Title section
+                              // Nome
                               Padding(
                                 padding: const EdgeInsets.all(16),
                                 child: Text(
@@ -451,7 +482,6 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
         ],
       ),
 
-      // BOTÃO +
       floatingActionButton: FloatingActionButton(
         onPressed: _onAddButtonPressed,
         backgroundColor: AppColors.azulEscuro,

@@ -1,4 +1,5 @@
 import 'package:dasypus/common/models/categoria.dart';
+import 'package:dasypus/common/routes/app_routes.dart';
 import 'package:dasypus/config/services/api_service.dart';
 import 'package:dasypus/common/constants/api_constants.dart';
 import 'package:dasypus/common/utils/shared_prefs_helper.dart';
@@ -170,7 +171,7 @@ class _CriarCategoriaPageState extends State<CriarCategoriaPage> {
     );
 
     await _apiService.createCategory(categoria);
-    Navigator.pop(context);
+    AppRoutes.navigateTo(context, AppRoutes.listaCategoria);
   }
 
   @override

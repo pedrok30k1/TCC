@@ -1,4 +1,5 @@
 import 'package:dasypus/common/models/card.dart' as models;
+import 'package:dasypus/common/routes/app_routes.dart';
 import 'package:dasypus/config/services/api_service.dart';
 import 'package:dasypus/common/constants/api_constants.dart';
 import 'package:dasypus/common/utils/shared_prefs_helper.dart';
@@ -184,7 +185,7 @@ class _CriarCardPageState extends State<CriarCardPage> {
     );
 
     await _apiService.createCard(novoCard);
-    Navigator.pop(context);
+    AppRoutes.navigateTo(context, AppRoutes.listaCard);
   }
 
   @override
