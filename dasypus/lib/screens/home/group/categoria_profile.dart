@@ -78,8 +78,7 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
         setState(() {
           _isLoading = false;
           _hasError = true;
-          _errorMessage =
-              resultado['message'] ?? 'Erro ao carregar categorias';
+          _errorMessage = resultado['message'] ?? 'Erro ao carregar categorias';
         });
       }
     } catch (e) {
@@ -132,7 +131,7 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                 onTap: () {
                   Navigator.pop(context);
                   SharedPrefsHelper.saveCategoriaId(categoria['id']);
-                  AppRoutes.navigateToAndClear(context, AppRoutes.listaCard);
+                  AppRoutes.navigateTo(context, AppRoutes.listaCard);
                 },
               ),
 
@@ -161,24 +160,26 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
 
                   final confirm = await showDialog<bool>(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text("Confirmar"),
-                      content: const Text(
-                          "Deseja realmente deletar esta categoria?"),
-                      actions: [
-                        TextButton(
-                          child: const Text("Cancelar"),
-                          onPressed: () => Navigator.pop(context, false),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text("Confirmar"),
+                          content: const Text(
+                            "Deseja realmente deletar esta categoria?",
                           ),
-                          child: const Text("Deletar"),
-                          onPressed: () => Navigator.pop(context, true),
+                          actions: [
+                            TextButton(
+                              child: const Text("Cancelar"),
+                              onPressed: () => Navigator.pop(context, false),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                              child: const Text("Deletar"),
+                              onPressed: () => Navigator.pop(context, true),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
                   );
 
                   if (confirm != true) return;
@@ -187,21 +188,21 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                   setState(() {
                     _isLoading = true;
                     // ✅ Atualização otimista
-                    _categorias
-                        .removeWhere((c) => c['id'] == categoria['id']);
+                    _categorias.removeWhere((c) => c['id'] == categoria['id']);
                   });
 
                   try {
-                    final resultado =
-                        await _apiService.deleteCategory(categoria['id']);
+                    final resultado = await _apiService.deleteCategory(
+                      categoria['id'],
+                    );
 
                     if (!mounted) return;
 
                     if (resultado['status'] == 'success') {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                            content:
-                                Text("Categoria deletada com sucesso!")),
+                          content: Text("Categoria deletada com sucesso!"),
+                        ),
                       );
                       await _loadUserFilho();
                     } else {
@@ -217,7 +218,6 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                   } catch (e) {
                     if (!mounted) return;
                     await _loadUserFilho();
-                  
                   }
                 },
               ),
@@ -239,8 +239,7 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-          body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_hasError) {
@@ -291,8 +290,7 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.03),
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.03),
                     Expanded(
                       child: Container(
                         height: MediaQuery.of(context).size.height * 0.09,
@@ -336,15 +334,14 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
                                   horizontal:
-                                      MediaQuery.of(context).size.width *
-                                          0.04,
+                                      MediaQuery.of(context).size.width * 0.04,
                                 ),
                                 child: Text(
                                   "Minhas Categorias",
                                   style: TextStyle(
                                     fontSize:
                                         MediaQuery.of(context).size.width *
-                                            0.045,
+                                        0.045,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black87,
                                   ),
@@ -364,120 +361,124 @@ class _CategoriaProfileScreenState extends State<CategoriaProfileScreen> {
 
           // LISTA
           Expanded(
-            child: _categorias.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.inbox,
-                            size: 80, color: Colors.black26),
-                        const SizedBox(height: 12),
-                        const Text(
-                          "Nenhuma categoria encontrada para este usuário.",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _categorias.length,
-                    itemBuilder: (context, index) {
-                      final Map<String, dynamic> categoria =
-                          _categorias[index];
-                      return InkWell(
-                        onTap: () => _onCategoriaTap(categoria),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: _hexToColor(
-                              categoria['tema_cor'] ?? "#CCCCCC",
+            child:
+                _categorias.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.inbox, size: 80, color: Colors.black26),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "Nenhuma categoria encontrada para este usuário.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black54,
                             ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Imagem
-                              if (categoria['foto_url'] != null &&
-                                  categoria['foto_url']
-                                      .toString()
-                                      .isNotEmpty)
-                                SizedBox(
-                                  height: 120,
-                                  width: double.infinity,
-                                  child: ClipRRect(
-                                    borderRadius:
-                                        const BorderRadius.only(
-                                      topLeft: Radius.circular(12),
-                                      topRight: Radius.circular(12),
+                        ],
+                      ),
+                    )
+                    : ListView.builder(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: _categorias.length,
+                      itemBuilder: (context, index) {
+                        final Map<String, dynamic> categoria =
+                            _categorias[index];
+                        return InkWell(
+                          onTap: () => _onCategoriaTap(categoria),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: _hexToColor(
+                                categoria['tema_cor'] ?? "#CCCCCC",
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Imagem
+                                if (categoria['foto_url'] != null &&
+                                    categoria['foto_url'].toString().isNotEmpty)
+                                  SizedBox(
+                                    height: 120,
+                                    width: double.infinity,
+                                    child: ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(12),
+                                        topRight: Radius.circular(12),
+                                      ),
+                                      child: Image.network(
+                                        _imageService.getImageUrl(
+                                          categoria['foto_url'],
+                                        ),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (
+                                          context,
+                                          error,
+                                          stackTrace,
+                                        ) {
+                                          return Container(
+                                            height: 120,
+                                            width: double.infinity,
+                                            color: Colors.grey[300],
+                                            child: const Icon(
+                                              Icons.image_not_supported,
+                                              color: Colors.grey,
+                                              size: 40,
+                                            ),
+                                          );
+                                        },
+                                        loadingBuilder: (
+                                          context,
+                                          child,
+                                          loadingProgress,
+                                        ) {
+                                          if (loadingProgress == null) {
+                                            return child;
+                                          }
+                                          return Container(
+                                            height: 120,
+                                            width: double.infinity,
+                                            color: Colors.grey[200],
+                                            child: const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                    child: Image.network(
-                                      _imageService.getImageUrl(
-                                          categoria['foto_url']),
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error,
-                                          stackTrace) {
-                                        return Container(
-                                          height: 120,
-                                          width: double.infinity,
-                                          color: Colors.grey[300],
-                                          child: const Icon(
-                                            Icons.image_not_supported,
-                                            color: Colors.grey,
-                                            size: 40,
-                                          ),
-                                        );
-                                      },
-                                      loadingBuilder: (context, child,
-                                          loadingProgress) {
-                                        if (loadingProgress == null) {
-                                          return child;
-                                        }
-                                        return Container(
-                                          height: 120,
-                                          width: double.infinity,
-                                          color: Colors.grey[200],
-                                          child: const Center(
-                                            child:
-                                                CircularProgressIndicator(),
-                                          ),
-                                        );
-                                      },
+                                  ),
+                                // Nome
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Text(
+                                    categoria['nome'] ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
-                              // Nome
-                              Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Text(
-                                  categoria['nome'] ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
           ),
         ],
       ),
