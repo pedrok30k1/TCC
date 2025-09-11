@@ -151,321 +151,323 @@ class _HomeFilhoState extends State<HomeFilho> {
       return Scaffold(body: Center(child: Text(_errorMessage)));
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.azulClaro,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              // HEADER
-              Container(
-                height: MediaQuery.of(context).size.height * 0.18,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: Colors.blueAccent.shade700 != null
-                        ? [Colors.blueAccent.shade700, Colors.blueAccent.shade400]
-                        : [Colors.blueAccent, Colors.lightBlueAccent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        height: 60,
-                        width: 60,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(Icons.arrow_back, color: Colors.black87),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Container(
-                        height: 60,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: AppColors.azulEscuro,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Icon(Icons.collections, color: Colors.white),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text(
-                              "Meus Cards",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // BARRA SUPERIOR DE CARDS SELECIONADOS
-              if (_barra.isNotEmpty)
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: AppColors.azulClaro,
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                // HEADER
                 Container(
-                  height: 100,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  color: AppColors.azulClaro,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _barra.length,
-                    itemBuilder: (context, index) {
-                      final card = _barra[index];
-                      return GestureDetector(
-                        onTap: () => _removeCardFromBarra(index),
+                  height: MediaQuery.of(context).size.height * 0.18,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: Colors.blueAccent.shade700 != null
+                          ? [Colors.blueAccent.shade700, Colors.blueAccent.shade400]
+                          : [Colors.blueAccent, Colors.lightBlueAccent],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
                         child: Container(
-                          width: 80,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          height: 60,
+                          width: 60,
                           decoration: BoxDecoration(
-                            color: _hexToColor(card['tema_cor'] ?? "#CCCCCC"),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withOpacity(0.05),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
                             ],
                           ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          child: const Icon(Icons.arrow_back, color: Colors.black87),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Container(
+                          height: 60,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
                             children: [
-                              if (card['imagem_url'] != null && card['imagem_url'].toString().isNotEmpty)
-                                Container(
-                                  height: 50,
-                                  width: 50,
-                                  margin: const EdgeInsets.only(bottom: 4),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      _imageService.getImageUrl(card['imagem_url']),
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          const Icon(Icons.image_not_supported, size: 30),
-                                    ),
-                                  ),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.azulEscuro,
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
-                                child: Text(
-                                  card['titulo'] ?? '',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 2,
+                                child: const Icon(Icons.collections, color: Colors.white),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                "Meus Cards",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ),
-
-              // LISTA DE CARDS
-              Expanded(
-                child: _cards.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.inbox, size: 80, color: Colors.black26),
-                            SizedBox(height: 12),
-                            Text(
-                              "Nenhum card encontrado",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black54,
-                              ),
+      
+                // BARRA SUPERIOR DE CARDS SELECIONADOS
+                if (_barra.isNotEmpty)
+                  Container(
+                    height: 100,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    color: AppColors.azulClaro,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _barra.length,
+                      itemBuilder: (context, index) {
+                        final card = _barra[index];
+                        return GestureDetector(
+                          onTap: () => _removeCardFromBarra(index),
+                          child: Container(
+                            width: 80,
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: _hexToColor(card['tema_cor'] ?? "#CCCCCC"),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _cards.length,
-                        itemBuilder: (context, index) {
-                          final card = _cards[index];
-                          return InkWell(
-                            onTap: () => _onCardTap(card),
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              decoration: BoxDecoration(
-                                color: _hexToColor(card['tema_cor'] ?? "#CCCCCC"),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(20),
-                                child: Stack(
-                                  children: [
-                                    if (card['imagem_url'] != null && card['imagem_url'].toString().isNotEmpty)
-                                      Image.network(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (card['imagem_url'] != null && card['imagem_url'].toString().isNotEmpty)
+                                  Container(
+                                    height: 50,
+                                    width: 50,
+                                    margin: const EdgeInsets.only(bottom: 4),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
                                         _imageService.getImageUrl(card['imagem_url']),
-                                        height: 150,
-                                        width: double.infinity,
                                         fit: BoxFit.cover,
-                                      ),
-                                    Container(
-                                      height: 150,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [Colors.black.withOpacity(0.5), Colors.transparent],
-                                          begin: Alignment.bottomCenter,
-                                          end: Alignment.topCenter,
-                                        ),
+                                        errorBuilder: (context, error, stackTrace) =>
+                                            const Icon(Icons.image_not_supported, size: 30),
                                       ),
                                     ),
-                                    Positioned(
-                                      bottom: 16,
-                                      left: 16,
-                                      right: 16,
-                                      child: Text(
-                                        card['titulo'] ?? '',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
-                                        ),
-                                      ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text(
+                                    card['titulo'] ?? '',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+      
+                // LISTA DE CARDS
+                Expanded(
+                  child: _cards.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.inbox, size: 80, color: Colors.black26),
+                              SizedBox(height: 12),
+                              Text(
+                                "Nenhum card encontrado",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _cards.length,
+                          itemBuilder: (context, index) {
+                            final card = _cards[index];
+                            return InkWell(
+                              onTap: () => _onCardTap(card),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: _hexToColor(card['tema_cor'] ?? "#CCCCCC"),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 3),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ),
-
-              const SizedBox(height: 80), // Espaço para botão flutuante
-            ],
-          ),
-
-          // BOTÃO FALAR FLOTA
-          if (_barra.isNotEmpty)
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: FloatingActionButton.extended(
-                onPressed: () => _falar(_barra.last),
-                backgroundColor: AppColors.azulEscuro,
-                label: const Text("Falar", style: TextStyle(fontWeight: FontWeight.bold)),
-                icon: const Icon(Icons.volume_up),
-              ),
-            ),
-        ],
-      ),
-
-      // CATEGORIAS
-      bottomNavigationBar: _categorias.isEmpty
-          ? null
-          : SizedBox(
-              height: 90,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                itemCount: _categorias.length,
-                itemBuilder: (context, index) {
-                  final categoria = _categorias[index];
-                  final color = _hexToColor(categoria['tema_cor'] ?? "#CCCCCC");
-                  return GestureDetector(
-                    onTap: () => _onCategoriaTap(index),
-                    child: Container(
-                      width: 70,
-                      height: 70,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: _selectedIndex == index ? color : color.withOpacity(0.5),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          if (_selectedIndex == index)
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                        ],
-                      ),
-                      child: Center(
-                        child: categoria['foto_url'] != null && categoria['foto_url'].toString().isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(35),
-                                child: Image.network(
-                                  _imageService.getImageUrl(categoria['foto_url']),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.image),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Stack(
+                                    children: [
+                                      if (card['imagem_url'] != null && card['imagem_url'].toString().isNotEmpty)
+                                        Image.network(
+                                          _imageService.getImageUrl(card['imagem_url']),
+                                          height: 150,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      Container(
+                                        height: 150,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [Colors.black.withOpacity(0.5), Colors.transparent],
+                                            begin: Alignment.bottomCenter,
+                                            end: Alignment.topCenter,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 16,
+                                        left: 16,
+                                        right: 16,
+                                        child: Text(
+                                          card['titulo'] ?? '',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              )
-                            : Text(
-                                categoria['nome']?.substring(0, 1) ?? "?",
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                               ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                            );
+                          },
+                        ),
+                ),
+      
+                const SizedBox(height: 80), // Espaço para botão flutuante
+              ],
             ),
+      
+            // BOTÃO FALAR FLOTA
+            if (_barra.isNotEmpty)
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: FloatingActionButton.extended(
+                  onPressed: () => _falar(_barra.last),
+                  backgroundColor: AppColors.azulEscuro,
+                  label: const Text("Falar", style: TextStyle(fontWeight: FontWeight.bold)),
+                  icon: const Icon(Icons.volume_up),
+                ),
+              ),
+          ],
+        ),
+      
+        // CATEGORIAS
+        bottomNavigationBar: _categorias.isEmpty
+            ? null
+            : SizedBox(
+                height: 90,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  itemCount: _categorias.length,
+                  itemBuilder: (context, index) {
+                    final categoria = _categorias[index];
+                    final color = _hexToColor(categoria['tema_cor'] ?? "#CCCCCC");
+                    return GestureDetector(
+                      onTap: () => _onCategoriaTap(index),
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: _selectedIndex == index ? color : color.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            if (_selectedIndex == index)
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                          ],
+                        ),
+                        child: Center(
+                          child: categoria['foto_url'] != null && categoria['foto_url'].toString().isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(35),
+                                  child: Image.network(
+                                    _imageService.getImageUrl(categoria['foto_url']),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.image),
+                                  ),
+                                )
+                              : Text(
+                                  categoria['nome']?.substring(0, 1) ?? "?",
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+      ),
     );
   }
 
