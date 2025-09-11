@@ -81,9 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 topRight: Radius.circular(12),
                               ),
                               child: Image.network(
-                                _imageService.getImageUrl(
-                                  _userFotoUrl ?? '',
-                                ),
+                                _imageService.getImageUrl(_userFotoUrl ?? ''),
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
@@ -97,8 +95,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                                   );
                                 },
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
+                                loadingBuilder: (
+                                  context,
+                                  child,
+                                  loadingProgress,
+                                ) {
                                   if (loadingProgress == null) return child;
                                   return Container(
                                     height: 120,
@@ -156,16 +157,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             const Text(
               "Perfis dos Filhos",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 12),
 
             // Componente de perfis dos filhos
-            const allChildren.ProfilesFilhosScreen(showAppBar: false), // 👈 usa o alias
+            Expanded(
+              child: allChildren.ProfilesFilhosScreen(showAppBar: false),
+            ),
           ],
         ),
       ),
